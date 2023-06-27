@@ -1,0 +1,40 @@
+/* You can add global styles to this file, and also import other style files */
+@import '../node_modules/@angular/material/prebuilt-themes/deeppurple-amber.css';
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+
+mat-form-field {
+  margin: -5px !important;
+  width: 100%;
+}
+
+.mat-mdc-form-field-infix {
+  min-height: 28px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.mat-mdc-form-field .mat-mdc-floating-label.mdc-floating-label {
+  padding-bottom: 15px;
+  font-size: 14px !important;
+}
+
+mat-form-field input {
+  font-size: 14px !important;
+}
+
+.mdc-text-field--invalid:not(.mdc-text-field--disabled) .mdc-floating-label {
+  color: darkred !important;
+}
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

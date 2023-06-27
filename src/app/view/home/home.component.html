@@ -1,0 +1,39 @@
+<mat-grid-list [cols]="1" rowHeight="5rem">
+
+  <mat-grid-tile [colspan]="1" [rowspan]="2">
+    <img src="assets/headeridk.png">
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="1" [rowspan]="3">
+
+    <mat-card>
+      <mat-card-content>
+        <span class="line1">Ongoing Production Orders :</span>
+        <p></p>
+        <span class="line2">{{ inProgressProductionCount }}</span>
+      </mat-card-content>
+
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <span class="line1">Pending Customer Orders :</span>
+        <p></p>
+        <span class="line2">{{ inProgressCustomerCount }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>Card 1</mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+
+
+</mat-grid-list>
+

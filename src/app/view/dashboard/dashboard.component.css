@@ -1,0 +1,12 @@
+mat-card {  width: 100%;  height:100%;  margin: 10px 10px -10px 10px ; }
+
+mat-card-content { overflow: auto; height: 100%; }
+
+mat-card-header { background: #98b1c8; }
+
+.mat-mdc-chip-set .mdc-evolution-chip-set__chips {
+  min-width: 100%;
+}
+.mat-mdc-chip-set{
+  margin-left: 8px!important;
+}

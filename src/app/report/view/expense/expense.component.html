@@ -1,0 +1,62 @@
+<mat-grid-list [cols]="1" rowHeight="12rem">
+
+  <mat-grid-tile [colspan]="0.5" [rowspan]="1">
+
+  <mat-card class="one">
+<mat-card-content class="two">
+    <mat-form-field class="three">
+      <mat-label>Period</mat-label>
+      <mat-select [(ngModel)]="selectedPeriod">
+        <mat-option *ngFor="let period of periods" [value]="period">
+          {{ period }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div id="butpanel">
+      <button mat-raised-button (click)="generate()" ><mat-icon>assessment</mat-icon>Generate Report</button>
+    </div>
+</mat-card-content>
+  </mat-card>
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="1" [rowspan]="2">
+
+    <mat-card>
+
+      <mat-card-header><mat-card-title>Table View</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <mat-table [dataSource]="data">
+          <ng-container *ngFor="let column of columns; let i = index;" [matColumnDef]="column">
+            <mat-header-cell *matHeaderCellDef> {{ headers[i] }} </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{ element[binders[i]] }} </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="columns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: columns;"></mat-row>
+
+        </mat-table>
+        <div style="display: flex; margin-top: 10px; font-weight: bold">
+          <div style="margin-left: 20px;">
+            <span>Total Expenses:</span>
+          </div>
+          <div style="margin-left: 65px;">
+            <span>{{ calculateTotalExpenses() }}</span>
+          </div>
+        </div>
+        <div id="butpanel2">
+          <button mat-button (click)="print()"> <mat-icon>print</mat-icon> Print</button>
+        </div>
+
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header><mat-card-title>Bar Chart</mat-card-title></mat-card-header>
+      <mat-card-content><div #barchart></div></mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+
+
+</mat-grid-list>
+
+

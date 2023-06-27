@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
+mat-card {
+  width: 30%;
+  border: #071f35;
+  border-radius: 0px !important;
+  box-shadow: #446d92 2px 2px 15px;
+  background-color: #f7fafe;
+  top: 30px;
+  right: 280px;
+
+
+}
+
+
+mat-grid-list {
+  background-image: url("/assets/loginback3.png");
+  background-size: cover;
+}
+
+mat-card-header {
+  background: #071f35;
+  height: 150px;
+}
+
+mat-card-title img {
+  width: 100%;
+  height: 100%;
+}
+
+mat-card-title p {
+  color: white;
+  text-align: left;
+  font-size: 15px;
+}
+
+mat-card-content p {
+  color: black;
+  text-align: center;
+  font-size: 50px;
+  padding-bottom: 20px;
+  padding-top: 20px;
+  font-family: "Great Vibes";
+}
+
+mat-card-content {
+  padding: 5%;
+  background-color: white;
+}
+
+mat-card-actions {
+  child-align: middle !important;
+}
+
+mat-card-actions button:nth-child(2) {
+  margin-left: 10px;
+}
+
+button {
+  color: white !important;
+}
+
+button[btn-a] {
+  background: #446d92 !important;
+
+}
+
+button[btn-b] {
+  background: #24496b !important;
+}
+

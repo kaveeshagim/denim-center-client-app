@@ -1,0 +1,164 @@
+<mat-grid-list [cols]="12" rowHeight="4rem">
+
+  <mat-grid-tile [colspan]="4" [rowspan]="10">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Customerpayment Detail</mat-card-title>
+      </mat-card-header>
+      <mat-card-content id="customerpaymentform">
+        <mat-form [formGroup]="form" >
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="date" formControlName="date">
+            <mat-datepicker-toggle matIconSuffix [for]="date"></mat-datepicker-toggle>
+            <mat-datepicker #date></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Invoice</mat-label>
+            <mat-select formControlName="invoice" (selectionChange)="updateAmount($event.value)">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let invoice of invoices" [value]="invoice">{{invoice.number}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" floatLabel="always">
+            <mat-label>Amount</mat-label>
+            <input matInput formControlName="amount" class="example-right-align" placeholder="0">
+            <span matTextPrefix>Rs.&nbsp;</span>
+            <span matTextSuffix>.00</span>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Remarks</mat-label>
+            <input matInput formControlName="remarks">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Customer</mat-label>
+            <mat-select formControlName="customer">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let customer of customers" [value]="customer">{{customer.companyname}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Paymentstatus</mat-label>
+            <mat-select formControlName="paymentstatus">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let paymentstatus of paymentstatuses"
+                          [value]="paymentstatus">{{paymentstatus.name}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+
+
+          <mat-form-field appearance="outline">
+            <mat-label>Paymentmethod</mat-label>
+            <mat-select formControlName="paymentmethod">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let paymentmethod of paymentmethods"
+                          [value]="paymentmethod">{{paymentmethod.name}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+
+          <div id="butpanel">
+            <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
+            <button mat-raised-button (click)="clear()">Clear</button>
+            <button mat-raised-button (click)="update()" [disabled]="!enaupd">Update</button>
+            <button mat-raised-button (click)="delete()" [disabled]="!enadel">Delete</button>
+          </div>
+        </mat-form>
+      </mat-card-content>
+
+    </mat-card>
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="8" [rowspan]="4">
+    <mat-card id="ssearch">
+      <mat-card-header>
+        <mat-card-title>Customerpayment Search</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form [formGroup]="ssearch">
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Customer</mat-label>
+            <mat-select formControlName="sscustomer">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let customer of customers" [value]="customer.id">{{customer.companyname}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Paymentstatus</mat-label>
+            <mat-select formControlName="sspaymentstatus">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let paymentstatus of paymentstatuses" [value]="paymentstatus.id">{{paymentstatus.name}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Invoice</mat-label>
+            <mat-select formControlName="ssinvoice">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let invoice of invoices" [value]="invoice.id">{{invoice.number}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Paymentmethod</mat-label>
+            <mat-select formControlName="sspaymentmethod">
+              <mat-option [value]="null" selected>Not Selected</mat-option>
+              <mat-option *ngFor="let paymentmethod of paymentmethods" [value]="paymentmethod.id">{{paymentmethod.name}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div>
+            <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
+            <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>reorder</mat-icon>Clear Search</button>
+          </div>
+
+        </mat-form>
+      </mat-card-content>
+
+    </mat-card>
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="8" [rowspan]="6">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Customerpayment Table</mat-card-title>
+        <div id="loading">
+          <img [src]="imageurl">
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-table [dataSource]="data" class="mat-elevation-z8 demo-table">
+
+          <ng-container *ngFor="let column of columns;let i = index;" [matColumnDef]="column">
+            <mat-header-cell *matHeaderCellDef> {{headers[i]}} </mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
+          </ng-container>
+
+
+
+          <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
+
+          <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
+
+        </mat-table>
+        <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+
+
+</mat-grid-list>
+
+
+
+
+

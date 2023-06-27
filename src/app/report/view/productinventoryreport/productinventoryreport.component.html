@@ -1,0 +1,31 @@
+<mat-grid-list [cols]="1" rowHeight="12rem">
+
+
+  <mat-grid-tile [colspan]="1" [rowspan]="4">
+    <mat-card>
+      <mat-card-header><mat-card-title>Table View</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <mat-table [dataSource]="data">
+          <ng-container *ngFor="let column of columns;let i = index;" [matColumnDef]="column">
+            <mat-header-cell *matHeaderCellDef> {{headers[i]}} </mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="columns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: columns;"></mat-row>
+        </mat-table>
+        <div id="butpanel">
+          <button mat-button (click)="print()"> <mat-icon>print</mat-icon> Print</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header><mat-card-title>Bar Chart</mat-card-title></mat-card-header>
+      <mat-card-content><div #barchart></div></mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+
+
+
+</mat-grid-list>
+

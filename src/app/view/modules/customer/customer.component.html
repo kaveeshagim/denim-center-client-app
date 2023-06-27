@@ -1,0 +1,141 @@
+<mat-grid-list [cols]="12" rowHeight="4rem">
+
+  <mat-grid-tile [colspan]="4" [rowspan]="10">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Customer Detail</mat-card-title>
+      </mat-card-header>
+      <mat-card-content id="customerform">
+        <mat-form [formGroup]="form" >
+
+          <mat-form-field appearance="outline">
+            <mat-label>Company Name</mat-label>
+            <input matInput formControlName="companyname">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Address</mat-label>
+            <input matInput formControlName="address">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>NIC</mat-label>
+            <input matInput formControlName="nic">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Mobile</mat-label>
+            <input matInput formControlName="mobile">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" placeholder="Ex. abc@example.com">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date Added</mat-label>
+            <input matInput [matDatepicker]="dateadded" formControlName="dateadded">
+            <mat-datepicker-toggle matIconSuffix [for]="dateadded"></mat-datepicker-toggle>
+            <mat-datepicker #dateadded></mat-datepicker>
+          </mat-form-field>
+
+
+          <div id="butpanel">
+            <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
+            <button mat-raised-button (click)="clear()">Clear</button>
+            <button mat-raised-button (click)="update()" [disabled]="!enaupd">Update</button>
+            <button mat-raised-button (click)="delete()" [disabled]="!enadel">Delete</button>
+          </div>
+        </mat-form>
+      </mat-card-content>
+
+    </mat-card>
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="8" [rowspan]="4">
+    <mat-card id="ssearch">
+      <mat-card-header>
+        <mat-card-title>Customer Search</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form [formGroup]="ssearch">
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Company Name</mat-label>
+            <input matInput formControlName="sscompanyname">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Name</mat-label>
+            <input matInput formControlName="ssname">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by NIC</mat-label>
+            <input matInput formControlName="ssnic">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Search by Mobile</mat-label>
+            <input matInput formControlName="ssmobile">
+          </mat-form-field>
+
+
+          <div>
+            <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
+            <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>reorder</mat-icon>Clear Search</button>
+          </div>
+
+        </mat-form>
+      </mat-card-content>
+
+    </mat-card>
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="8" [rowspan]="6">
+    <mat-card>
+      <mat-card-header>
+
+          <mat-card-title>Customer Table </mat-card-title>
+        <div id="loading">
+          <img [src]="imageurl">
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-table [dataSource]="data" class="mat-elevation-z8  demo-table">
+
+          <ng-container *ngFor="let column of columns;let i = index;" [matColumnDef]="column">
+            <mat-header-cell *matHeaderCellDef> {{headers[i]}} </mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
+          </ng-container>
+
+
+
+          <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
+
+        </mat-table>
+        <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+
+
+</mat-grid-list>
+
+
+
+
+
+
