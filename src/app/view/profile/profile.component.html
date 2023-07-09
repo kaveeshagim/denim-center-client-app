@@ -1,0 +1,86 @@
+<mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event)">
+  <mat-tab label="My Profile">
+<mat-card *ngIf="currentUser; else loggedOut">
+  <mat-card-content>
+    <table mat-table [dataSource]="dataSource">
+      <ng-container matColumnDef="username">
+        <th mat-header-cell *matHeaderCellDef>Username</th>
+        <td mat-cell *matCellDef="let user">{{ currentUser.username }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="token">
+        <th mat-header-cell *matHeaderCellDef>Token</th>
+        <td mat-cell *matCellDef="let user">
+          {{ currentUser.accessToken.substring(0, 20) }} ...
+          {{ currentUser.accessToken.substr(currentUser.accessToken.length - 20) }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="roles">
+        <th mat-header-cell *matHeaderCellDef>Roles</th>
+        <td mat-cell *matCellDef="let user">
+          <ul>
+            <li *ngFor="let role of currentUser.roles">{{ role }}</li>
+          </ul>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="getUserRole(user: any)">
+        <th mat-header-cell *matHeaderCellDef>Logged in as</th>
+        <td mat-cell *matCellDef="let user">{{ getUserRole(user) }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let user; columns: displayedColumns;"></tr>
+    </table>
+  </mat-card-content>
+</mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <mat-card-header>
+          <mat-card-title>Switch Roles</mat-card-title>
+        </mat-card-header>
+
+        <div id="title-name" class="radio-group-label">Pick your role</div>
+        <mat-radio-group
+          aria-labelledby="example-radio-group-label"
+          class="example-radio-group"
+          [(ngModel)]="selectedRole">
+          <mat-radio-button class="example-radio-button" *ngFor="let role of currentUser.roles" [value]="role">
+            {{ role }}
+          </mat-radio-button>
+        </mat-radio-group>
+        <div id = "switch-button">
+        <button btn-a mat-raised-button (click)="changeRoles(selectedRole)">Switch</button>
+        </div>
+
+
+
+      </mat-card-content>
+    </mat-card>
+
+
+  </mat-tab>
+</mat-tab-group>
+
+<!--<div class="container" *ngIf="currentUser; else loggedOut">
+  <header class="jumbotron">
+    <h3><strong>{{ currentUser.username }}</strong> Profile </h3>
+  </header>
+  <p> <strong>Token:</strong>
+    {{ currentUser.accessToken.substring(0, 20) }} ...
+    {{ currentUser.accessToken.substr(currentUser.accessToken.length - 20) }}
+  </p>
+  <strong>Roles:</strong>
+  <ul>
+    <li *ngFor="let role of currentUser.roles">
+      {{ role }}
+    </li>
+  </ul>
+</div>-->
+
+<ng-template #loggedOut>
+  Please login.
+</ng-template>
+

@@ -2,6 +2,7 @@ import {Component, OnInit, ViewChild} from '@angular/core';
 import {MatTableDataSource} from "@angular/material/table";
 import {ReportService} from "../reportservice";
 import {Countbyporderstatus} from "../../entity/countbyporderstatus";
+import {TokenStorageService} from "../../../view/services/token-storage.service";
 
 declare var google: any;
 
@@ -23,20 +24,20 @@ export class CountbyporderstatusComponent implements OnInit{
   @ViewChild('piechart', { static: false }) piechart: any;
   @ViewChild('linechart', { static: false }) linechart: any;
 
-  constructor(private rs: ReportService) {
+  constructor(private rs: ReportService, private ts: TokenStorageService) {
     //Define Interactive Panel with Needed Form Elements
   }
 
   ngOnInit(): void {
-
-    this.rs.countbyporderstatus()
-      .then((des: Countbyporderstatus[]) => {
-        this.countbyporderstatuses = des;
-      }).finally(() => {
-      this.loadTable();
-      this.loadCharts();
-    });
-
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")) {
+      this.rs.countbyporderstatus()
+        .then((des: Countbyporderstatus[]) => {
+          this.countbyporderstatuses = des;
+        }).finally(() => {
+        this.loadTable();
+        this.loadCharts();
+      });
+    }
   }
 
   print() {

@@ -5,6 +5,7 @@ import {Countbyproductionstatus} from "../entity/countbyproductionstatus";
 import {Countbyporderstatus} from "../entity/countbyporderstatus";
 import {Countbycorderstatus} from "../entity/countbycorderstatus";
 import {Expense} from "../entity/expense";
+import {Income} from "../entity/income";
 
 @Injectable({
   providedIn: 'root'
@@ -84,6 +85,51 @@ export class ReportService {
       return [];
     }
     return expenses;
+  }
+
+  async income(): Promise<Array<Expense>> {
+
+    const incomes = await this.http.get<Array<Income>>('http://localhost:8080/reports/income').toPromise();
+    if(incomes == undefined){
+      return [];
+    }
+    return incomes;
+  }
+
+  async dailyIncome(): Promise<Array<Income>> {
+
+    const incomes = await this.http.get<Array<Income>>('http://localhost:8080/reports/dailyincome').toPromise();
+    if(incomes == undefined){
+      return [];
+    }
+    return incomes;
+  }
+
+  async weeklyIncome(): Promise<Array<Income>> {
+
+    const incomes = await this.http.get<Array<Income>>('http://localhost:8080/reports/weeklyincome').toPromise();
+    if(incomes == undefined){
+      return [];
+    }
+    return incomes;
+  }
+
+  async monthlyIncome(): Promise<Array<Expense>> {
+
+    const incomes = await this.http.get<Array<Income>>('http://localhost:8080/reports/monthlyincome').toPromise();
+    if(incomes == undefined){
+      return [];
+    }
+    return incomes;
+  }
+
+  async yearlyIncome(): Promise<Array<Income>> {
+
+    const incomes = await this.http.get<Array<Income>>('http://localhost:8080/reports/yearlyincome').toPromise();
+    if(incomes  == undefined){
+      return [];
+    }
+    return incomes ;
   }
 
 

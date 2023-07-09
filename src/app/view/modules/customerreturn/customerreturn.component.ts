@@ -18,6 +18,8 @@ import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {Invoice} from "../../../entity/invoice";
 import {InvoiceService} from "../../../service/invoiceservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-customerreturn',
@@ -28,7 +30,7 @@ export class CustomerreturnComponent {
 
   columns: string[] = ['qty', 'date', 'returncost', 'reason', 'customer', 'invoice'];
   headers: string[] = ['Qty', 'Date', 'Returncost', 'Reason', 'Customer', 'Invoice'];
-  binders: string[] = ['qty', 'date', 'returncost', 'reason', 'customer.name', 'invoice.number'];
+  binders: string[] = ['qty', 'date', 'returncost', 'reason', 'customer.companyname', 'invoice.number'];
 
 
 
@@ -43,6 +45,7 @@ export class CustomerreturnComponent {
   data!: MatTableDataSource<Customerreturn>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   customers: Array<Customer> = [];
@@ -60,6 +63,7 @@ export class CustomerreturnComponent {
     private crs: CustomerreturnService,
     private cs: CustomerService,
     private os: InvoiceService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -110,7 +114,6 @@ export class CustomerreturnComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -124,9 +127,6 @@ export class CustomerreturnComponent {
     //this.form.controls['reason'].setValidators([Validators.required]);
     this.form.controls['returncost'].setValidators([Validators.required]);
 
-
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -143,7 +143,6 @@ export class CustomerreturnComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
@@ -152,7 +151,11 @@ export class CustomerreturnComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -160,11 +163,9 @@ export class CustomerreturnComponent {
     this.crs.getAll(query)
       .then((prods: Customerreturn[]) => {
         this.customerreturns = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.customerreturns);
@@ -177,7 +178,6 @@ export class CustomerreturnComponent {
 
     let invoiceid = ssearchdata.ssinvoice;
     let customerid = ssearchdata.sscustomer;
-
 
 
     let query="";
@@ -206,27 +206,6 @@ export class CustomerreturnComponent {
     });
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Customerreturn) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -238,12 +217,8 @@ export class CustomerreturnComponent {
     }
     else{
       this.customerreturn = this.form.getRawValue();
-      //console.log("Photo-Before"+this.customerreturn.photo);
-      //this.customerreturn.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.customerreturn.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Id is : "+ this.customerreturn.id;
-      proddata = proddata + "<br>Number is : "+ this.customerreturn.invoice.number;
+      proddata = proddata + "<br>Invoice number is : "+ this.customerreturn.invoice.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Customerreturn Add", message: "Are you sure to Add the following Customerreturn? <br> <br>"+ proddata}
@@ -303,23 +278,19 @@ export class CustomerreturnComponent {
 
   }
 
-
+onTabChange(event: MatTabChangeEvent){}
   fillForm(customerreturn:Customerreturn) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=customerreturn;
 
     this.customerreturn = JSON.parse(JSON.stringify(customerreturn));
     this.oldcustomerreturn = JSON.parse(JSON.stringify(customerreturn));
 
-    /*if (this.customerreturn.image != null) {
-    this.imageempurl = btoa(this.customerreturn.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.customerreturn.image = "";
     //@ts-ignore
     this.customerreturn.customer = this.customers.find(g => g.id === this.customerreturn.customer.id);
     //@ts-ignore
@@ -330,6 +301,7 @@ export class CustomerreturnComponent {
 
     this.form.patchValue(this.customerreturn);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -355,8 +327,6 @@ export class CustomerreturnComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.customerreturn = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.customerreturn.image = btoa(this.imageempurl);
-            //else this.customerreturn.image = this.oldcustomerreturn.image;
             //@ts-ignore
             this.customerreturn.id = this.oldcustomerreturn.id;
             this.crs.update(this.customerreturn).then((response: [] | undefined) => {

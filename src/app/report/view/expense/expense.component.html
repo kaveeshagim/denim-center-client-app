@@ -1,10 +1,11 @@
 <mat-grid-list [cols]="1" rowHeight="12rem">
 
-  <mat-grid-tile [colspan]="0.5" [rowspan]="1">
+  <mat-grid-tile [colspan]="1" [rowspan]="0.5">
 
-  <mat-card class="one">
-<mat-card-content class="two">
-    <mat-form-field class="three">
+  <mat-card id="expenseperiod">
+    <mat-card-header><mat-card-title>Expenses</mat-card-title></mat-card-header>
+<mat-card-content>
+    <mat-form-field appearance="outline">
       <mat-label>Period</mat-label>
       <mat-select [(ngModel)]="selectedPeriod">
         <mat-option *ngFor="let period of periods" [value]="period">
@@ -20,7 +21,7 @@
   </mat-card>
   </mat-grid-tile>
 
-  <mat-grid-tile [colspan]="1" [rowspan]="2">
+  <mat-grid-tile [colspan]="1" [rowspan]="3">
 
     <mat-card>
 
@@ -54,6 +55,16 @@
       <mat-card-header><mat-card-title>Bar Chart</mat-card-title></mat-card-header>
       <mat-card-content><div #barchart></div></mat-card-content>
     </mat-card>
+  </mat-grid-tile>
+
+  <mat-grid-tile [colspan]="1" [rowspan]="3">
+
+
+    <mat-card>
+      <mat-card-header><mat-card-title>Line Chart View</mat-card-title></mat-card-header>
+      <mat-card-content><div #linechart></div></mat-card-content>
+    </mat-card>
+
   </mat-grid-tile>
 
 

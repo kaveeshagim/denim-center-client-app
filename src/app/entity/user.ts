@@ -1,17 +1,23 @@
 import {Userstatus} from "./userstatus";
+import {Role} from "./role";
 
 export class User {
   public id !: number;
   public username !: string;
   public password !: string;
-  public docreated !: string;
-  public userstatus !: Userstatus;
+  public roles !: Role[];
 
-  constructor(id:number, username:string, password: string, docreated: string, userstatus: Userstatus) {
+  [key: string]: any; // Index signature to allow accessing properties dynamically
+
+  constructor(id:number, username:string, password: string, roles: Role[]) {
     this.id = id;
     this.username = username;
     this.password = password;
-    this.docreated = docreated;
-    this.userstatus = userstatus;
+    this.roles = roles;
+
   }
 }
+
+/*loginlogin - loginlogin -> admin
+
+ */

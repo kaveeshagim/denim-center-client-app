@@ -1,221 +1,159 @@
-import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
-import {MatTableDataSource} from "@angular/material/table";
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MaterialinventoryService } from '../../service/materialinventoryservice';
+import { TokenStorageService } from '../services/token-storage.service';
+import {Materialinventory} from "../../entity/materialinventory";
+import {Productinventory} from "../../entity/productinventory";
+import {ProductinventoryService} from "../../service/productinventoryservice";
+import {Countbyproductionstatus} from "../../report/entity/countbyproductionstatus";
+import {ReportService} from "../../report/view/reportservice";
+import {Expense} from "../../report/entity/expense";
+import {Income} from "../../report/entity/income";
+import {DatePipe} from "@angular/common";
 
 declare var google: any;
 
-interface IncomeExpense{
-  date: string;
-  income: string;
-  expenses: string;
-}
-
-interface ProductionOrders{
-  productionordernumber: string;
-  duedate: string;
-  status: string;
-}
-
-interface ProductPieChartConfig {
-  data: any[];
-  options: any;
-  chartElement: any;
-}
-
-interface MaterialPieChartConfig {
-  data: any[];
-  options: any;
-  chartElement: any;
-}
-
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-home',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-
 export class DashboardComponent implements OnInit {
+  materialinventories!: Materialinventory[];
+  productinventories!: Productinventory[];
+  countbyproductionstatuses!: Countbyproductionstatus[];
+  expenses!: Expense[];
+  income!: Income[];
+  @ViewChild('barchart1', { static: false }) barchart1: any;
+  @ViewChild('barchart2', { static: false }) barchart2: any;
+  @ViewChild('donutchart', { static: false }) donutchart: any;
+  @ViewChild('piechart', { static: false }) piechart: any;
 
-  assignmentData! : IncomeExpense[];
-  productionorders! : ProductionOrders[];
-  data1!: MatTableDataSource<IncomeExpense>;
-  data2!: MatTableDataSource<ProductionOrders>;
-
-  columns1: string[] = ['date', 'income', 'expenses'];
-  headers1: string[] = ['Date', 'Income', 'Expenses'];
-  binders1: string[] = ['date', 'income', 'expenses'];
-
-  columns2: string[] = ['productionordernumber', 'duedate', 'status'];
-  headers2: string[] = ['Production Order Number', 'Due Date', 'Status'];
-  binders2: string[] = ['productionordernumber', 'duedate', 'status'];
-
-  @ViewChildren('ProductInventoryPie') ProductInventoryPie!: QueryList<any>;
-  @ViewChildren('MaterialInventoryPie') MaterialInventoryPie!: QueryList<any>;
-
-  MaterialPieChartConfigs: MaterialPieChartConfig[] = [
-    {
-      data: [
-        ['Effort', 'Amount given'],
-        ['Left', 80],
-        ['Used', 20],
-      ],
-      options: {
-        title: 'Denim Fabric',
-        height: 300,
-        width: 200,
-        pieHole: 0.5,
-        pieSliceTextStyle: {
-          color: 'black',
-        },
-        legend: 'none',
-      },
-      chartElement: null,
-    },
-
-    {
-      data: [
-        ['Effort', 'Amount given'],
-        ['Left', 82],
-        ['Used', 18],
-      ],
-      options: {
-        title: 'Twill',
-        height: 300,
-        width: 200,
-        pieHole: 0.5,
-        pieSliceTextStyle: {
-          color: 'black',
-        },
-        legend: 'none',
-      },
-      chartElement: null,
-    },
-    {
-      data: [
-        ['Effort', 'Amount given'],
-        ['Left', 70],
-        ['Used', 30],
-      ],
-      options: {
-        title: 'Dye',
-        height: 300,
-        width: 200,
-        pieHole: 0.5,
-        pieSliceTextStyle: {
-          color: 'black',
-        },
-        legend: 'none',
-      },
-      chartElement: null,
-    },
-  ];
-
-  ProductPieChartConfigs: ProductPieChartConfig[] = [
-    {
-      data: [
-        ['Effort', 'Amount given'],
-        ['Left', 50],
-        ['Sold', 50],
-      ],
-      options: {
-        title: 'Adult',
-        height: 300,
-        width: 200,
-        pieHole: 0.5,
-        pieSliceTextStyle: {
-          color: 'black',
-        },
-        legend: 'none',
-      },
-      chartElement: null,
-    },
-
-    {
-      data: [
-        ['Effort', 'Amount given'],
-        ['Left', 70],
-        ['Sold', 30],
-      ],
-      options: {
-        title: 'Teen',
-        height: 300,
-        width: 200,
-        pieHole: 0.5,
-        pieSliceTextStyle: {
-          color: 'black',
-        },
-        legend: 'none',
-      },
-      chartElement: null,
-    },
-    {
-      data: [
-        ['Effort', 'Amount given'],
-        ['Left', 45],
-        ['Sold', 55],
-      ],
-      options: {
-        title: 'Kids',
-        height: 300,
-        width: 200,
-        pieHole: 0.5,
-        pieSliceTextStyle: {
-          color: 'black',
-        },
-        legend: 'none',
-      },
-      chartElement: null,
-    },
-  ];
+  constructor(
+    private mis: MaterialinventoryService,
+    private pis: ProductinventoryService,
+    private rs: ReportService,
+    private ts: TokenStorageService,
+    private dp: DatePipe
+  ) {}
 
   ngOnInit(): void {
-    this.loadCharts();
-    this.drawTable();
-    this.loadData();
+    this.mis.getAllList()
+      .then((des: Materialinventory[]) => {
+        this.materialinventories = des;
+      })
+      .finally(() => {
+        this.loadCharts();
+      });
+    this.rs.countbyproductionstatus()
+      .then((des: Countbyproductionstatus[]) => {
+        this.countbyproductionstatuses = des;
+      }).finally(() => {
+      this.loadCharts();
+    });
+    this.rs.dailyExpense()
+      .then((des: Expense[]) => {
+        this.expenses = des;
+      }).finally(() => {
+      this.loadCharts();
+    });
+    this.rs.dailyIncome()
+      .then((des: Income[]) => {
+        this.income = des;
+      }).finally(() => {
+      this.loadCharts();
+    });
+
   }
 
   loadCharts(): void {
     google.charts.load('current', { packages: ['corechart'] });
-    google.charts.setOnLoadCallback(() => this.drawCharts());
+    google.charts.setOnLoadCallback(this.drawCharts.bind(this));
   }
 
-  drawPieChart(data: any[], options: any, chartElement: any): void {
-    const pieData = google.visualization.arrayToDataTable(data);
+  drawCharts() {
+    const donutData = new google.visualization.DataTable();
+    donutData.addColumn('string', 'Material');
+    donutData.addColumn('number', 'Quantity');
 
-    const pieChart = new google.visualization.PieChart(chartElement.nativeElement);
-    pieChart.draw(pieData, options);
-  }
+    const pieData = new google.visualization.DataTable();
+    pieData.addColumn('string', 'ProductionStatus');
+    pieData.addColumn('number', 'Count');
 
-  drawCharts(): void {
+    const barDataExpense = new google.visualization.DataTable();
+    barDataExpense.addColumn('date', 'new Date(formattedDate)');
+    barDataExpense.addColumn('number', 'Amount');
 
-    this.ProductInventoryPie.forEach((chartElement, index) => {
-      const config = this.ProductPieChartConfigs[index];
-      config.chartElement = chartElement;
-      this.drawPieChart(config.data, config.options, config.chartElement);
+    const barDataIncome = new google.visualization.DataTable();
+    barDataIncome.addColumn('date', 'new Date(formattedDate)');
+    barDataIncome.addColumn('number', 'Amount');
+
+    const today = new Date();
+    const formattedDate = this.dp.transform(today, 'yyyy-MM-dd');
+
+    // Array of material names to display in the donut chart
+    const selectedMaterials = ['Denim Fabric', 'Twill', 'Polyester', 'Indigo Dye'];
+
+    this.materialinventories.forEach((inventory: Materialinventory) => {
+      if (selectedMaterials.includes(inventory.material.name)) {
+        donutData.addRow([inventory.material.name, inventory.qty]);
+      }
     });
-    this.MaterialInventoryPie.forEach((chartElement, index) => {
-      const config = this.MaterialPieChartConfigs[index];
-      config.chartElement = chartElement;
-      this.drawPieChart(config.data, config.options, config.chartElement);
+
+    this.countbyproductionstatuses.forEach((des: Countbyproductionstatus) => {
+      pieData.addRow([des.productionstatus, des.count]);
     });
+
+    this.expenses.forEach((des: Expense) => {
+      const dateValue = new Date(des.date); // Convert des.date to a Date object
+      barDataExpense.addRow([dateValue, des.amount]);;
+    });
+
+    this.income.forEach((des: Income) => {
+      const dateValue = new Date(des.date); // Convert des.date to a Date object
+      barDataIncome.addRow([dateValue, des.amount]);;
+    });
+
+    const donutOptions = {
+      title: 'Material Inventory (Donut Chart)',
+      pieHole: 0.4,
+      height: 400,
+      width: 500
+    };
+
+    const pieOptions = {
+      title: 'ProductionStatus Count (Pie Chart)',
+      height: 400,
+      width: 550
+    };
+
+    const barOptionsExpense = {
+      title: 'Expenses (Bar Chart)',
+      subtitle: 'Expenses',
+      bars: 'horizontal',
+      height: 400,
+      width: 600
+    };
+
+    const barOptionsIncome = {
+      title: 'Income (Bar Chart)',
+      subtitle: 'Expenses',
+      bars: 'horizontal',
+      height: 400,
+      width: 600
+    };
+
+    const donutChart = new google.visualization.PieChart(this.donutchart.nativeElement);
+    donutChart.draw(donutData, donutOptions);
+
+    const pieChart = new google.visualization.PieChart(this.piechart.nativeElement);
+    pieChart.draw(pieData, pieOptions);
+
+    const barChartExpense = new google.visualization.BarChart(this.barchart1.nativeElement);
+    barChartExpense.draw(barDataExpense, barOptionsExpense);
+
+    const barChartIncome = new google.visualization.BarChart(this.barchart2.nativeElement);
+    barChartIncome.draw(barDataIncome, barOptionsIncome);
+
   }
 
-  loadData(): void {
-    this.data1 = new MatTableDataSource<IncomeExpense>(this.assignmentData);
-    this.data2 = new MatTableDataSource<ProductionOrders>(this.productionorders);
-  }
-
-  drawTable(): void {
-    this.assignmentData = [
-      { date: '2023-05-27', income: '10,000', expenses: '5000' },
-      { date: '2023-05-26', income: '15,000', expenses: '4500' },
-      { date: '2023-05-25', income: '10,200', expenses: '6000' },
-    ];
-
-    this.productionorders = [
-      { productionordernumber: '2301', duedate: '2023-06-01', status: 'Ongoing' },
-      { productionordernumber: '2302', duedate: '2023-06-01', status: 'Ongoing' },
-      {productionordernumber: '2303', duedate: '2023-06-04', status: 'Ongoing' },
-    ];
-  }
 }
-

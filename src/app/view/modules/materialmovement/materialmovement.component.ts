@@ -14,6 +14,8 @@ import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-materialmovement',
@@ -37,6 +39,7 @@ export class MaterialmovementComponent {
   data!: MatTableDataSource<Materialmovement>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   materialinventories: Array<Materialinventory> = []
@@ -54,6 +57,7 @@ export class MaterialmovementComponent {
     private mis: MaterialinventoryService,
     private mts: MovementtypeService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -143,9 +147,12 @@ export class MaterialmovementComponent {
   loadForm(){
     this.oldmaterialmovement = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -153,11 +160,9 @@ export class MaterialmovementComponent {
     this.mms.getAll(query)
       .then((prods: Materialmovement[]) => {
         this.materialmovements = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.materialmovements);
@@ -212,7 +217,7 @@ export class MaterialmovementComponent {
     } else {
       this.materialmovement = this.form.getRawValue();
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : " + this.materialmovement.materialinventory.number;
+      proddata = proddata + "<br>Material Inventory number is : " + this.materialmovement.materialinventory.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Materialmovement Add", message: "Are you sure to Add the following Materialmovement? <br> <br>" + proddata}
@@ -302,23 +307,31 @@ export class MaterialmovementComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+    const tabIndex = event.index;
+    // Perform actions based on the selected tab index
+    if (tabIndex === 0) {
+      // Do something when the first tab is selected
+    } else if (tabIndex === 1) {
+      // Do something when the second tab is selected
+    } else if (tabIndex === 2) {
+      // Do something when the third tab is selected
+    }
+    // Add more conditions for other tabs if needed
+  }
 
   fillForm(materialmovement:Materialmovement) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=materialmovement;
 
     this.materialmovement = JSON.parse(JSON.stringify(materialmovement));
     this.oldmaterialmovement = JSON.parse(JSON.stringify(materialmovement));
 
-    /*if (this.materialmovement.image != null) {
-      this.imageempurl = btoa(this.materialmovement.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.materialmovement.image = "";
     //@ts-ignore
     this.materialmovement.materialinventory = this.productinventories.find(g => g.id === this.materialmovement.materialinventory.id);
     //@ts-ignore
@@ -327,6 +340,7 @@ export class MaterialmovementComponent {
 
     this.form.patchValue(this.materialmovement);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

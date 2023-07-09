@@ -1,13 +1,8 @@
-<mat-grid-list [cols]="12" rowHeight="4rem">
-
-  <mat-grid-tile [colspan]="4" [rowspan]="10">
+<mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event)">
+  <mat-tab label="Bill Of Materials Detail">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Bill of material Detail</mat-card-title>
-      </mat-card-header>
       <mat-card-content id="billofmaterialform">
-        <mat-form [formGroup]="form" >
-
+        <mat-form [formGroup]="form">
 
           <mat-form-field appearance="outline">
             <mat-label>Qty</mat-label>
@@ -24,14 +19,11 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Production Order</mat-label>
-            <mat-select formControlName="">
+            <mat-select formControlName="productionorder">
               <mat-option [value]="null" selected>Not Selected</mat-option>
               <mat-option *ngFor="let productionorder of productionorders" [value]="productionorder">{{productionorder.number}}</mat-option>
             </mat-select>
           </mat-form-field>
-
-
-
 
           <div id="butpanel">
             <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
@@ -41,18 +33,13 @@
           </div>
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
+  </mat-tab>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="4">
+  <mat-tab label="Bill Of Material Search & Table">
     <mat-card id="ssearch">
-      <mat-card-header>
-        <mat-card-title>Bill of material Search</mat-card-title>
-      </mat-card-header>
       <mat-card-content>
         <mat-form [formGroup]="ssearch">
-
 
           <mat-form-field appearance="outline">
             <mat-label>Search by Material</mat-label>
@@ -74,30 +61,18 @@
             <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
             <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>rebillofmaterial</mat-icon>Clear Search</button>
           </div>
-
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="6">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Bill of material Table</mat-card-title>
-        <div id="loading">
-          <img [src]="imageurl">
-        </div>
-      </mat-card-header>
       <mat-card-content>
         <mat-table [dataSource]="data" class="mat-elevation-z8 demo-table">
 
           <ng-container *ngFor="let column of columns;let i = index;" [matColumnDef]="column">
-            <mat-header-cell *matHeaderCellDef> {{headers[i]}} </mat-header-cell>
-            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
+            <mat-header-cell *matHeaderCellDef>{{headers[i]}}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }}</mat-cell>
           </ng-container>
-
-
 
           <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
@@ -106,10 +81,37 @@
         <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
       </mat-card-content>
     </mat-card>
-  </mat-grid-tile>
+  </mat-tab>
+</mat-tab-group>
 
 
-</mat-grid-list>
+
+
+
+<!--<mat-grid-list [cols]="12" rowHeight="4rem">
+
+      <mat-grid-tile [colspan]="4" [rowspan]="10">
+        <mat-card-header>
+          <mat-card-title>Bill of material Detail</mat-card-title>
+        </mat-card-header>
+      </mat-grid-tile>
+
+      <mat-grid-tile [colspan]="8" [rowspan]="4">
+      </mat-grid-tile>
+
+      <mat-grid-tile [colspan]="8" [rowspan]="6">
+        <mat-card-header>
+          <mat-card-title>Bill of material Table</mat-card-title>
+          <div id="loading">
+            <img [src]="imageurl">
+          </div>
+        </mat-card-header>
+      </mat-grid-tile>
+
+
+</mat-grid-list>-->
+
+
 
 
 

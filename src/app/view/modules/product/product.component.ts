@@ -22,6 +22,8 @@ import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {Product} from "../../../entity/product";
 import {Customer} from "../../../entity/customer";
 import {DatePipe} from "@angular/common";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-product',
@@ -47,6 +49,7 @@ export class ProductComponent {
   data!: MatTableDataSource<Product>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   // Arrays for dropdowns
@@ -70,6 +73,7 @@ export class ProductComponent {
     private cs: ColorService,
     private ss: SizeService,
     private ts: TypeService,
+    private tss: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -149,7 +153,6 @@ this.createSearch();
 }
 
 createView() {
-this.imageurl = 'assets/pending.gif';
 this.loadTable("");
 }
 
@@ -169,7 +172,6 @@ createForm(){
     this.form.controls['size'].setValidators([Validators.required]);
     this.form.controls['type'].setValidators([Validators.required]);
 
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
   // Subscribe to value changes of form controls
   for (const controlName in this.form.controls) {
@@ -189,7 +191,6 @@ createForm(){
     });
   }
 
-  //this.enableButtons(true, false, false);
   this.loadForm();
 }
 
@@ -199,7 +200,11 @@ loadForm(){
   this.form.reset();
   this.clearImage();
   Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-  this.enableButtons(true, false, false);
+  if (this.tss.getUser().roles.includes("ROLE_ADMIN") || this.tss.getUser().roles.includes("ROLE_MANAGER")) {
+    this.enableButtons(true, false, false);
+  } else {
+    this.enableButtons(false, false, false);
+  }
   this.selectedrow = null;
 }
 
@@ -208,11 +213,9 @@ loadTable(query:string){
 this.ps.getAll(query)
   .then((prods: Product[]) => {
     this.products = prods;
-    this.imageurl = 'assets/fullfilled.png';
   })
   .catch((error) => {
     console.log(error);
-    this.imageurl = 'assets/rejected.png';
   })
   .finally(() => {
     this.data = new MatTableDataSource(this.products);
@@ -232,6 +235,7 @@ this.ps.getAll(query)
 
     let query="";
 
+    //building a query string based on the value of the variable
     if(code!=null && code.trim()!="") query=query+"&code="+code;
     if(genderid!=null) query=query+"&genderid="+genderid;
     if(agecategoryid!=null) query=query+"&agecategoryid="+agecategoryid;
@@ -349,13 +353,18 @@ this.ps.getAll(query)
       }
     }
     return errors;
-
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+  }
 
   fillForm(product:Product) {
 
-    this.enableButtons(false, true, true);
+    if (this.tss.getUser().roles.includes("ROLE_ADMIN") || this.tss.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=product;
 
     this.product = JSON.parse(JSON.stringify(product));
@@ -382,6 +391,7 @@ this.ps.getAll(query)
 
     this.form.patchValue(this.product);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -453,7 +463,9 @@ this.ps.getAll(query)
   }
 
 
-
+ // iterates over the form controls, checks if each control has been changed, and generates a string
+  // representation of the updates. The string includes the names of the controls that have been changed,
+  // with the first letter capitalized and the word "Changed" appended
   getUpdates(): string {
     let updates: string = "";
     for (const controlName in this.form.controls) {

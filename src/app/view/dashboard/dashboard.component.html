@@ -1,34 +1,15 @@
 <mat-grid-list [cols]="1" rowHeight="12rem">
 
- <!-- <mat-grid-tile [colspan]="1" [rowspan]="1">
-    <mat-card>
-      <mat-card-header><mat-card-title>Dashboard</mat-card-title></mat-card-header>
-      <mat-card-content><p></p><h3>Static Report - No Interactive Panel Available</h3></mat-card-content>
-    </mat-card>
-  </mat-grid-tile>-->
 
   <mat-grid-tile [colspan]="1" [rowspan]="2">
     <mat-card>
-      <mat-card-header><mat-card-title>Product Inventory</mat-card-title></mat-card-header>
-      <mat-chip-grid>
-        <mat-chip-set class="mat-mdc-chip-set">
-          <div *ngFor="let config of ProductPieChartConfigs" #ProductInventoryPie></div>
-        </mat-chip-set>
-      </mat-chip-grid>
+      <mat-card-header><mat-card-title>Material Inventory</mat-card-title></mat-card-header>
+      <mat-card-content><div #donutchart></div></mat-card-content>
     </mat-card>
 
     <mat-card>
       <mat-card-header><mat-card-title>Production Orders</mat-card-title></mat-card-header>
-      <mat-card-content>
-        <mat-table [dataSource]="data2">
-          <ng-container *ngFor="let column of columns2; let i = index;" [matColumnDef]="column">
-            <mat-header-cell *matHeaderCellDef> {{ headers2[i] }} </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{ element[binders2[i]] }} </mat-cell>
-          </ng-container>
-          <mat-header-row *matHeaderRowDef="columns2"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: columns2;"></mat-row>
-        </mat-table>
-      </mat-card-content>
+      <mat-card-content><div #piechart></div></mat-card-content>
     </mat-card>
   </mat-grid-tile>
 
@@ -36,26 +17,13 @@
   <mat-grid-tile [colspan]="1" [rowspan]="2">
 
     <mat-card>
-      <mat-card-header><mat-card-title>Material Inventory</mat-card-title></mat-card-header>
-      <mat-chip-grid>
-        <mat-chip-set class="mat-mdc-chip-set">
-          <div *ngFor="let config of MaterialPieChartConfigs" #MaterialInventoryPie></div>
-        </mat-chip-set>
-      </mat-chip-grid>
+      <mat-card-header><mat-card-title>Expenses</mat-card-title></mat-card-header>
+      <mat-card-content><div #barchart1></div></mat-card-content>
     </mat-card>
 
     <mat-card>
-      <mat-card-header><mat-card-title>Income & Expenses</mat-card-title></mat-card-header>
-      <mat-card-content>
-        <mat-table [dataSource]="data1">
-          <ng-container *ngFor="let column of columns1; let i = index;" [matColumnDef]="column">
-            <mat-header-cell *matHeaderCellDef> {{ headers1[i] }} </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{ element[binders1[i]] }} </mat-cell>
-          </ng-container>
-          <mat-header-row *matHeaderRowDef="columns1"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: columns1;"></mat-row>
-        </mat-table>
-      </mat-card-content>
+      <mat-card-header><mat-card-title>Income</mat-card-title></mat-card-header>
+      <mat-card-content><div #barchart2></div></mat-card-content>
     </mat-card>
 
   </mat-grid-tile>

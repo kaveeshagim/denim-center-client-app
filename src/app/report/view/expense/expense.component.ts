@@ -2,6 +2,7 @@ import {Component, OnInit, ViewChild} from '@angular/core';
 import {Expense} from "../../entity/expense";
 import {MatTableDataSource} from "@angular/material/table";
 import {ReportService} from "../reportservice";
+import {TokenStorageService} from "../../../view/services/token-storage.service";
 
 declare var google: any
 @Component({
@@ -22,20 +23,22 @@ export class ExpenseComponent implements OnInit{
   binders: string[] = ['date', 'amount'];
 
   @ViewChild('barchart', { static: false }) barchart: any;
+  @ViewChild('linechart', { static: false }) linechart: any;
 
-
-  constructor(private rs: ReportService) {
+  constructor(private rs: ReportService, private ts: TokenStorageService) {
     //Define Interactive Panel with Needed Form Elements
   }
 
   ngOnInit(): void {
-    this.rs.dailyExpense()
-      .then((des: Expense[]) => {
-        this.expenses = des;
-      }).finally(() => {
-      this.loadTable();
-      this.loadCharts();
-    });
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")) {
+      this.rs.dailyExpense()
+        .then((des: Expense[]) => {
+          this.expenses = des;
+        }).finally(() => {
+        this.loadTable();
+        this.loadCharts();
+      });
+    }
   }
 
   loadTable() : void{
@@ -47,13 +50,16 @@ export class ExpenseComponent implements OnInit{
     google.charts.setOnLoadCallback(this.drawCharts.bind(this));
   }
 
-  calculateTotalExpenses() {
+  calculateTotalExpenses(): number {
     let total = 0;
-    for (const expense of this.expenses) {
-      total += expense.amount;
+    if (this.expenses) {
+      for (const expense of this.expenses) {
+        total += expense.amount;
+      }
     }
     return total;
   }
+
 
 
   generate() {
@@ -102,11 +108,18 @@ export class ExpenseComponent implements OnInit{
     barData.addColumn('date', 'Date');
     barData.addColumn('number', 'Amount');
 
+    const lineData = new google.visualization.DataTable();
+    lineData.addColumn('date', 'Date');
+    lineData.addColumn('number', 'Amount');
+
 
     this.expenses.forEach((des: Expense) => {
-      barData.addRow([des.date, des.amount]);
-
+      const dateValue = new Date(des.date); // Convert des.date to a Date object
+      barData.addRow([dateValue, des.amount]);
+      lineData.addRow([dateValue, des.amount]);
     });
+
+
 
     const barOptions = {
       title: 'Expenses (Bar Chart)',
@@ -116,9 +129,18 @@ export class ExpenseComponent implements OnInit{
       width: 600
     };
 
+    const lineOptions = {
+      title: 'Expenses (Line Chart)',
+      height: 400,
+      width: 1200
+    };
+
 
     const barChart = new google.visualization.BarChart(this.barchart.nativeElement);
     barChart.draw(barData, barOptions);
+
+    const lineChart = new google.visualization.LineChart(this.linechart.nativeElement);
+    lineChart.draw(lineData, lineOptions);
 
   }
 }

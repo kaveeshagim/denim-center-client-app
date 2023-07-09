@@ -10,6 +10,8 @@ import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {DatePipe} from "@angular/common";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-supplier',
@@ -34,6 +36,7 @@ export class SupplierComponent {
   data!: MatTableDataSource<Supplier>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
 
   enaadd:boolean  = false;
   enaupd:boolean = false;
@@ -45,6 +48,7 @@ export class SupplierComponent {
   constructor(
     private ss: SupplierService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -68,7 +72,7 @@ export class SupplierComponent {
       "address": new FormControl('', [Validators.required]),
       "nic": new FormControl('', [Validators.required, Validators.pattern("^(([\\d]{9}[vVxX])|([\\d]{12}))$")]),
       "mobile": new FormControl('', [Validators.required, Validators.pattern("^0\\d{9}$")]),
-      "email": new FormControl('', [Validators.required]),
+      "email": new FormControl('', [Validators.required, Validators.pattern("^(([\\d]{9}[vVxX])|([\\d]{12}))$")]),
       "city": new FormControl('', [Validators.required]),
       "dateadded": new FormControl('', [Validators.required]),
 
@@ -84,7 +88,7 @@ export class SupplierComponent {
 
     this.rs.get('supplier').then((regs: []) => {
     this.regexes = regs;
-    //console.log("R-" + this.regexes['number']['regex']);
+
     this.createForm();
     });
 
@@ -105,11 +109,10 @@ export class SupplierComponent {
     this.form.controls['address'].setValidators([Validators.required]);
     this.form.controls['nic'].setValidators([Validators.required,Validators.pattern(this.regexes['nic']['regex'])]);
     this.form.controls['mobile'].setValidators([Validators.required,Validators.pattern(this.regexes['mobile']['regex'])]);
-    this.form.controls['email'].setValidators([Validators.required]);
+    this.form.controls['email'].setValidators([Validators.required,Validators.pattern(this.regexes['email']['regex'])]);
     this.form.controls['city'].setValidators([Validators.required]);
     this.form.controls['dateadded'].setValidators([Validators.required]);
 
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -126,16 +129,18 @@ export class SupplierComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldsupplier = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(true, false, false);
+    }else{
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -143,11 +148,9 @@ export class SupplierComponent {
     this.ss.getAll(query)
       .then((prods: Supplier[]) => {
         this.suppliers = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.suppliers);
@@ -203,13 +206,9 @@ export class SupplierComponent {
     }
     else{
       this.supplier = this.form.getRawValue();
-      //console.log("Photo-Before"+this.supplier.photo);
-      //this.supplier.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.supplier.photo);
       let supdata: string = "";
-     // supdata = supdata + "<br>Id is : "+ this.supplier.id;
-      supdata = supdata + "<br>Company Name is : "+ this.supplier.companyname;
-      supdata = supdata + "<br>Name is : "+ this.supplier.name;
+      supdata = supdata + "<br>Company name is : "+ this.supplier.companyname;
+      supdata = supdata + "<br>Supplier name is : "+ this.supplier.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Supplier Add", message: "Are you sure to Add the following Supplier? <br> <br>"+ supdata}
@@ -269,31 +268,25 @@ export class SupplierComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+  }
+
   fillForm(supplier:Supplier) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(false, true, true);
+    }else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=supplier;
 
     this.supplier = JSON.parse(JSON.stringify(supplier));
     this.oldsupplier = JSON.parse(JSON.stringify(supplier));
 
-    /* if (this.supplier.image != null) {
-      this.imageempurl = btoa(this.supplier.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    } */
-
-   /*  this.supplier.image = "";
-    //@ts-ignore
-    this.supplier.gender = this.genders.find(g => g.id === this.supplier.gender.id);
-    //@ts-ignore
-    this.supplier.department = this.departments.find(d => d.id === this.supplier.department.id);
-    //@ts-ignore
-    this.supplier.empstatus = this.empstatuses.find(s => s.id === this.supplier.empstatus.id); */
 
     this.form.patchValue(this.supplier);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

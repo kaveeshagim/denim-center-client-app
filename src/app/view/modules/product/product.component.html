@@ -1,18 +1,15 @@
-<mat-grid-list [cols]="12" rowHeight="4rem">
-
-  <mat-grid-tile [colspan]="4" [rowspan]="10">
+<mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event)">
+  <mat-tab label="Product Detail">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Product Detail</mat-card-title>
-      </mat-card-header>
       <mat-card-content id="productform">
-        <mat-form [formGroup]="form" >
+        <mat-form [formGroup]="form">
 
           <mat-form-field appearance="outline">
             <mat-label>Code</mat-label>
-            <input matInput formControlName="code">
-            <mat-error *ngIf="this.form.controls['code'].invalid"> {{ this.regexes['code']['message'] }}</mat-error>
+            <input matInput formControlName="code" placeholder="eg: 2301">
+            <mat-error *ngIf="this.form.controls['code'].invalid">{{ this.regexes['code']['message'] }}</mat-error>
           </mat-form-field>
+
           <p></p>
 
           <mat-form-field appearance="outline">
@@ -27,7 +24,7 @@
             <span matTextSuffix>.00</span>
           </mat-form-field>
 
-         <!-- <mat-form-field floatLabel="always">
+          <!-- <mat-form-field floatLabel="always">
             <mat-label>Amount</mat-label>
             <input matInput type="number" class="example-right-align" placeholder="0">
             <span matTextPrefix>$&nbsp;</span>
@@ -36,7 +33,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Produced Date</mat-label>
-            <input matInput [matDatepicker]="proddate" formControlName="proddate">
+            <input matInput [matDatepicker]="proddate" formControlName="proddate" placeholder="mm/dd/YY">
             <mat-datepicker-toggle matIconSuffix [for]="proddate"></mat-datepicker-toggle>
             <mat-datepicker #proddate></mat-datepicker>
           </mat-form-field>
@@ -58,32 +55,31 @@
             <mat-label>Age Category</mat-label>
             <mat-select formControlName="agecategory">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let agecategory of agecategories"
-                          [value]="agecategory">{{agecategory.name}}</mat-option>
+              <mat-option *ngFor="let agecategory of agecategories" [value]="agecategory">{{agecategory.name}}</mat-option>
             </mat-select>
           </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Color</mat-label>
             <mat-select formControlName="color">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let color of colors"
-                          [value]="color">{{color.name}}</mat-option>
+              <mat-option *ngFor="let color of colors" [value]="color">{{color.name}}</mat-option>
             </mat-select>
           </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Size</mat-label>
             <mat-select formControlName="size">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let size of sizes"
-                          [value]="size">{{size.name}}</mat-option>
+              <mat-option *ngFor="let size of sizes" [value]="size">{{size.name}}</mat-option>
             </mat-select>
           </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Type</mat-label>
             <mat-select formControlName="type">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let type of types"
-                          [value]="type">{{type.name}}</mat-option>
+              <mat-option *ngFor="let type of types" [value]="type">{{type.name}}</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -93,7 +89,6 @@
             <label for="userImage" id="selectbutton">Select</label>
             <label id="clearbutton" (click)="clearImage()">Clear</label>
           </div>
-
           <div id="butpanel">
             <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
             <button mat-raised-button (click)="clear()">Clear</button>
@@ -102,15 +97,11 @@
           </div>
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
+  </mat-tab>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="4">
+  <mat-tab label="Product Search & Table">
     <mat-card id="ssearch">
-      <mat-card-header>
-        <mat-card-title>Product Search</mat-card-title>
-      </mat-card-header>
       <mat-card-content>
         <mat-form [formGroup]="ssearch">
 
@@ -163,21 +154,11 @@
             <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
             <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>reorder</mat-icon>Clear Search</button>
           </div>
-
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="6">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Product Table</mat-card-title>
-        <div id="loading">
-          <img [src]="imageurl">
-        </div>
-      </mat-card-header>
       <mat-card-content>
         <mat-table [dataSource]="data" class="mat-elevation-z8 demo-table">
 
@@ -186,7 +167,6 @@
             <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
           </ng-container>
 
-
           <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
 
@@ -194,7 +174,5 @@
         <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
       </mat-card-content>
     </mat-card>
-  </mat-grid-tile>
-
-
-</mat-grid-list>
+  </mat-tab>
+</mat-tab-group>

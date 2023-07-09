@@ -17,7 +17,7 @@ export class Customerpayment {
   public paymentmethod !: Paymentmethod;
   public paymentstatus !: Paymentstatus;
 
-  constructor(id:number,  date : Date, amount : string, remarks : string, customer : Customer, invoice : Invoice, paymentmethod : Paymentmethod, paymentstatus : Paymentstatus) {
+  constructor(id: number,  date : Date, amount : string, remarks : string, customer : Customer, invoice : Invoice, paymentmethod : Paymentmethod, paymentstatus : Paymentstatus) {
     this.id = id;
     this.date = date;
     this.amount = amount;

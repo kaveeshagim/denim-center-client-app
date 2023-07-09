@@ -3,6 +3,7 @@ import {Materialinventory} from "../../../entity/materialinventory";
 import {MatTableDataSource} from "@angular/material/table";
 import {MaterialinventoryService} from "../../../service/materialinventoryservice";
 import {UiAssist} from "../../../util/ui/ui.assist";
+import {TokenStorageService} from "../../../view/services/token-storage.service";
 
 declare var google: any;
 @Component({
@@ -26,7 +27,8 @@ export class MaterialinventoryreportComponent implements OnInit{
 
 
   constructor(
-    private pis: MaterialinventoryService
+    private pis: MaterialinventoryService,
+    private ts: TokenStorageService
   ) {
     this.uiassist = new UiAssist(this);
   }
@@ -40,7 +42,7 @@ export class MaterialinventoryreportComponent implements OnInit{
       this.loadTable();
       this.loadCharts();
     });*/
-
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")) {
       this.pis.getAllList()
         .then((des: Materialinventory[]) => {
           this.materialinventories = des;
@@ -51,6 +53,7 @@ export class MaterialinventoryreportComponent implements OnInit{
           this.loadTable();
           this.loadCharts();
         });
+    }
     }
 
 

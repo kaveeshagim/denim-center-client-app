@@ -1,3 +1,9 @@
+<!--<div class="container">
+  <header class="jumbotron">
+    <p>{{ content }}</p>
+  </header>
+</div>-->
+
 <mat-grid-list [cols]="1" rowHeight="5rem">
 
   <mat-grid-tile [colspan]="1" [rowspan]="2">
@@ -25,12 +31,19 @@
 
     <mat-card>
       <mat-card-content>
-
+        <span class="line1">Today's Expenses :</span>
+        <p></p>
+        <span class="line2">{{ todayexpense }}</span>
       </mat-card-content>
     </mat-card>
 
+
     <mat-card>
-      <mat-card-content>Card 1</mat-card-content>
+      <mat-card-content>
+        <span class="line1">Today's Income :</span>
+        <p></p>
+        <span class="line2">{{ todayincome }}</span>
+      </mat-card-content>
     </mat-card>
   </mat-grid-tile>
 

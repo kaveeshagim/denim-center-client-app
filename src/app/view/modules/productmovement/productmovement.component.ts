@@ -16,6 +16,8 @@ import {Movementtype} from "../../../entity/movementtype";
 import {Productinventory} from "../../../entity/productinventory";
 import {ProductinventoryService} from "../../../service/productinventoryservice";
 import {MovementtypeService} from "../../../service/movementtypeservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-productmovement',
@@ -39,6 +41,7 @@ export class ProductmovementComponent {
   data!: MatTableDataSource<Productmovement>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   productinventories: Array<Productinventory> = []
@@ -55,6 +58,7 @@ export class ProductmovementComponent {
     private pms: ProductmovementService,
     private pis: ProductinventoryService,
     private mts: MovementtypeService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -106,7 +110,6 @@ export class ProductmovementComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -118,9 +121,6 @@ export class ProductmovementComponent {
     this.form.controls['date'].setValidators([Validators.required]);
     this.form.controls['productinventory'].setValidators([Validators.required]);
     this.form.controls['movementtype'].setValidators([Validators.required]);
-
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -137,16 +137,18 @@ export class ProductmovementComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldproductmovement = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -154,11 +156,9 @@ export class ProductmovementComponent {
     this.pms.getAll(query)
       .then((prods: Productmovement[]) => {
         this.productmovements = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.productmovements);
@@ -197,27 +197,6 @@ export class ProductmovementComponent {
     });
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Productmovement) {
-    return element.number + '(' + element.name + ')';
-  }*/
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -229,11 +208,8 @@ export class ProductmovementComponent {
     }
     else{
       this.productmovement = this.form.getRawValue();
-      //console.log("Photo-Before"+this.productmovement.photo);
-      //this.productmovement.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.productmovement.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.productmovement.productinventory.number;
+      proddata = proddata + "<br>Product inventory number is : "+ this.productmovement.productinventory.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Productmovement Add", message: "Are you sure to Add the following Productmovement? <br> <br>"+ proddata}
@@ -242,7 +218,6 @@ export class ProductmovementComponent {
       let addmessage:string="Server Not Found";
       confirm.afterClosed().subscribe(async result => {
         if(result){
-          // console.log("ProductmovementService.add(emp)");
           this.pms.add(this.productmovement).then((response: []|undefined) => {
             console.log("Res-"+response);
             console.log("Un-"+response==undefined);
@@ -293,23 +268,20 @@ export class ProductmovementComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {}
 
   fillForm(productmovement:Productmovement) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=productmovement;
 
     this.productmovement = JSON.parse(JSON.stringify(productmovement));
     this.oldproductmovement = JSON.parse(JSON.stringify(productmovement));
 
-    /*if (this.productmovement.image != null) {
-      this.imageempurl = btoa(this.productmovement.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.productmovement.image = "";
     //@ts-ignore
     this.productmovement.productinventory = this.productinventories.find(g => g.id === this.productmovement.productinventory.id);
     //@ts-ignore
@@ -318,6 +290,7 @@ export class ProductmovementComponent {
 
     this.form.patchValue(this.productmovement);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

@@ -23,6 +23,8 @@ import {ColorService} from "../../../service/colorservice";
 import {SizeService} from "../../../service/sizeservice";
 import {TypeService} from "../../../service/typeservice";
 import {Movementtype} from "../../../entity/movementtype";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-materialinventory',
@@ -48,6 +50,7 @@ export class MaterialinventoryComponent {
   data!: MatTableDataSource<Materialinventory>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   materials: Array<Material> = [];
@@ -62,6 +65,7 @@ export class MaterialinventoryComponent {
     private mis: MaterialinventoryService,
     private ms: MaterialService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -110,7 +114,6 @@ export class MaterialinventoryComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -123,8 +126,6 @@ export class MaterialinventoryComponent {
     this.form.controls['updateddate'].setValidators([Validators.required]);
     this.form.controls['material'].setValidators([Validators.required]);
 
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -141,7 +142,6 @@ export class MaterialinventoryComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
@@ -150,7 +150,11 @@ export class MaterialinventoryComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -201,27 +205,6 @@ export class MaterialinventoryComponent {
     });
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Materialinventory) {
-    return element.number + '(' + element.name + ')';
-  }*/
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -233,12 +216,9 @@ export class MaterialinventoryComponent {
     }
     else{
       this.materialinventory = this.form.getRawValue();
-      //console.log("Photo-Before"+this.materialinventory.photo);
-      //this.materialinventory.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.materialinventory.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.materialinventory.number;
-      proddata = proddata + "<br>Name is : "+ this.materialinventory.material.name;
+      proddata = proddata + "<br>Material Inventory number is : "+ this.materialinventory.number;
+      proddata = proddata + "<br>Material name is : "+ this.materialinventory.material.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Materialinventory Add", message: "Are you sure to Add the following Materialinventory? <br> <br>"+ proddata}
@@ -298,29 +278,28 @@ export class MaterialinventoryComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+
+  }
 
   fillForm(materialinventory:Materialinventory) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, true, true);
+    }
     this.selectedrow=materialinventory;
 
     this.materialinventory = JSON.parse(JSON.stringify(materialinventory));
     this.oldmaterialinventory = JSON.parse(JSON.stringify(materialinventory));
 
-    /*if (this.materialinventory.image != null) {
-      this.imageempurl = btoa(this.materialinventory.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.materialinventory.image = "";
     //@ts-ignore
     this.materialinventory.material = this.materials.find(g => g.id === this.materialinventory.material.id);
 
-
     this.form.patchValue(this.materialinventory);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

@@ -5,6 +5,7 @@ import {Countbyproductionstatus} from "../../entity/countbyproductionstatus";
 import {ProductinventoryService} from "../../../service/productinventoryservice";
 import {Materialinventory} from "../../../entity/materialinventory";
 import {UiAssist} from "../../../util/ui/ui.assist";
+import {TokenStorageService} from "../../../view/services/token-storage.service";
 
 declare var google: any;
 @Component({
@@ -28,22 +29,22 @@ export class ProductinventoryreportComponent implements OnInit{
   @ViewChild('linechart', { static: false }) linechart: any;
 
   constructor(
-    private pis: ProductinventoryService
+    private pis: ProductinventoryService, private ts: TokenStorageService
   ) {
 
     this.uiassist = new UiAssist(this);
   }
   ngOnInit(): void {
-
-    this.pis.getAllList()
-      .then((des: Productinventory[]) => {
-        this.productinventories = des;
-        this.productinventories = this.calculateInventoryStatus();
-      }).finally(() => {
-      this.loadTable();
-      this.loadCharts();
-    });
-
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")) {
+      this.pis.getAllList()
+        .then((des: Productinventory[]) => {
+          this.productinventories = des;
+          this.productinventories = this.calculateInventoryStatus();
+        }).finally(() => {
+        this.loadTable();
+        this.loadCharts();
+      });
+    }
   }
 
   calculateInventoryStatus(): Productinventory[] {

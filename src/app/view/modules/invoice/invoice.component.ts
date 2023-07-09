@@ -16,6 +16,8 @@ import {Customer} from "../../../entity/customer";
 import {Corder} from "../../../entity/corder";
 import {CorderService} from "../../../service/corderservice";
 import {CustomerService} from "../../../service/customerservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-invoice',
@@ -39,6 +41,7 @@ export class InvoiceComponent {
   data!: MatTableDataSource<Invoice>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   corders: Array<Corder> = [];
@@ -56,6 +59,7 @@ export class InvoiceComponent {
     private os: CorderService,
     private cs: CustomerService,
     private iss: InvoicestatusService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -117,7 +121,6 @@ export class InvoiceComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -136,7 +139,6 @@ export class InvoiceComponent {
     this.form.get('corder')?.valueChanges.subscribe((selectedCorder) => {
       this.updateSelection(selectedCorder);
     });
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -153,7 +155,6 @@ export class InvoiceComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
@@ -162,7 +163,11 @@ export class InvoiceComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -170,11 +175,9 @@ export class InvoiceComponent {
     this.is.getAll(query)
       .then((prods: Invoice[]) => {
         this.invoices = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.invoices);
@@ -220,23 +223,24 @@ export class InvoiceComponent {
 
   updateSelection(selectedCorder: any) {
     this.updateTotalAmount(selectedCorder);
-    this.updateCustomer(selectedCorder);
+    //this.updateCustomer(selectedCorder);
   }
 
 
-  updateCustomer(selectedCorder: any) {
+  /*updateCustomer(selectedCorder: any) {
     console.log("Selected Corder:", selectedCorder);
-    const totalAmountControl = this.form.get('customer');
+    const customerControl = this.form.get('customer');
 
-    if (totalAmountControl) {
+    if (customerControl) {
       if (selectedCorder) {
-        const totalAmount = selectedCorder.customer.companyname;
-        totalAmountControl.setValue(totalAmount);
+        const customer = selectedCorder.customer.companyname;
+        customerControl.patchValue({ value: customer });
       } else {
-        totalAmountControl.reset();
+        customerControl.reset();
       }
     }
-  }
+  }*/
+
 
   updateTotalAmount(selectedCorder: any) {
     console.log("Selected Corder:", selectedCorder);
@@ -254,8 +258,6 @@ export class InvoiceComponent {
 
 
 
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -267,12 +269,8 @@ export class InvoiceComponent {
     }
     else{
       this.invoice = this.form.getRawValue();
-      //console.log("Photo-Before"+this.invoice.photo);
-      //this.invoice.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.invoice.photo);
       let proddata: string = "";
       proddata = proddata + "<br>Number is : "+ this.invoice.number;
-      //proddata = proddata + "<br>Name is : "+ this.invoice.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Invoice Add", message: "Are you sure to Add the following Invoice? <br> <br>"+ proddata}
@@ -332,23 +330,19 @@ export class InvoiceComponent {
 
   }
 
-
+  onTabChange(event: MatTabChangeEvent) {}
   fillForm(invoice:Invoice) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=invoice;
 
     this.invoice = JSON.parse(JSON.stringify(invoice));
     this.oldinvoice = JSON.parse(JSON.stringify(invoice));
 
-    /*if (this.invoice.image != null) {
-      this.imageempurl = btoa(this.invoice.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.invoice.image = "";
     //@ts-ignore
     this.invoice.corder = this.corders.find(p => p.id === this.invoice.corder.id);
     //@ts-ignore
@@ -359,6 +353,7 @@ export class InvoiceComponent {
 
     this.form.patchValue(this.invoice);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -384,8 +379,6 @@ export class InvoiceComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.invoice = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.invoice.image = btoa(this.imageempurl);
-            //else this.invoice.image = this.oldinvoice.image;
             //@ts-ignore
             this.invoice.id = this.oldinvoice.id;
             this.is.update(this.invoice).then((response: [] | undefined) => {

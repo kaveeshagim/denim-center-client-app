@@ -10,6 +10,8 @@ import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {DatePipe} from "@angular/common";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-customer',
@@ -35,7 +37,7 @@ export class CustomerComponent {
   data!: MatTableDataSource<Customer>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   enaadd:boolean  = false;
   enaupd:boolean = false;
   enadel:boolean = false;
@@ -46,6 +48,7 @@ export class CustomerComponent {
   constructor(
     private cs: CustomerService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -132,7 +135,11 @@ export class CustomerComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(true, false, false);
+    }else{
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -140,11 +147,9 @@ export class CustomerComponent {
     this.cs.getAll(query)
       .then((prods: Customer[]) => {
         this.customers = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.customers);
@@ -187,24 +192,6 @@ export class CustomerComponent {
     });
   }
 
-  /* selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  } */
-
-
-
-
 
   add(){
     let errors = this.getErrors();
@@ -217,13 +204,9 @@ export class CustomerComponent {
     }
     else{
       this.customer = this.form.getRawValue();
-      //console.log("Photo-Before"+this.customer.photo);
-      //this.customer.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.customer.photo);
       let custdata: string = "";
-      // custdata = custdata + "<br>Id is : "+ this.customer.id;
-      custdata = custdata + "<br>First Name is : "+ this.customer.companyname;
-      custdata = custdata + "<br>Last Name is : "+ this.customer.name;
+      custdata = custdata + "<br>Company name is : "+ this.customer.companyname;
+      custdata = custdata + "<br>Customer name is : "+ this.customer.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Customer Add", message: "Are you sure to Add the following Customer? <br> <br>"+ custdata}
@@ -283,9 +266,14 @@ export class CustomerComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent){}
   fillForm(customer:Customer) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(false, true, true);
+    }else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=customer;
 
     this.customer = JSON.parse(JSON.stringify(customer));
@@ -308,6 +296,7 @@ export class CustomerComponent {
 
     this.form.patchValue(this.customer);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

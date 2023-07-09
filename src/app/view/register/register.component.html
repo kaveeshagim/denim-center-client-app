@@ -1,0 +1,45 @@
+<mat-grid-list cols="8" rowHeight="8rem">
+  <mat-grid-tile colspan="8" rowspan="6">
+    <mat-card>
+      <mat-card-content>
+    <form [formGroup]="registerform" *ngIf="!isSuccessful" name="registerform" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate>
+      <p>Sign Up</p>
+
+      <mat-form-field appearance="outline">
+        <mat-label>User Name</mat-label>
+        <input matInput formControlName="username" type="text" required minlength="4" id="username" />
+        <mat-error *ngIf="registerform.controls['username'].errors && f.submitted">Username is required! </mat-error>
+      </mat-form-field>
+
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input matInput formControlName="password" type="password" required minlength="4" id="password" />
+        <mat-error *ngIf="registerform.controls['password'].errors && f.submitted">
+          <ng-container *ngIf="registerform.controls['password'].errors['required']">
+            Password is required
+          </ng-container>
+          <ng-container *ngIf="registerform.controls['password'].errors['minlength']">
+            Password must be at least 4 characters
+          </ng-container>
+        </mat-error>
+      </mat-form-field>
+
+      <mat-card-actions align="end">
+        <button btn-a mat-raised-button type="submit">Sign Up</button>
+        <button btn-b mat-raised-button (click)="navigateToLogin()">Back to Login</button>
+      <div class="alert alert-warning" *ngIf="f.submitted && isSignUpFailed">
+        Signup failed!<br />{{ errorMessage }}
+      </div>
+      </mat-card-actions>
+    </form>
+
+    <!--<div class="alert alert-success" *ngIf="isSuccessful">
+      Your registration is successful!
+    </div>-->
+
+      </mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+</mat-grid-list>
+

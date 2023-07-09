@@ -14,6 +14,8 @@ import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {Productionstatus} from "../../../entity/productionstatus";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-productionorder',
@@ -37,11 +39,11 @@ export class ProductionorderComponent {
   data!: MatTableDataSource<Productionorder>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   products: Array<Product> = [];
   productionstatuses: Array<Productionstatus> = [];
-
 
 
   enaadd:boolean  = false;
@@ -54,6 +56,7 @@ export class ProductionorderComponent {
     private pos: ProductionorderService,
     private ps: ProductService,
     private pss: ProductionstatusService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -124,9 +127,6 @@ export class ProductionorderComponent {
     this.form.controls['productionstatus'].setValidators([Validators.required]);
 
 
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
       control.valueChanges.subscribe(value => {
@@ -142,16 +142,18 @@ export class ProductionorderComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldproductionorder = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -159,11 +161,9 @@ export class ProductionorderComponent {
     this.pos.getAll(query)
       .then((prods: Productionorder[]) => {
         this.productionorders = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.productionorders);
@@ -205,27 +205,6 @@ export class ProductionorderComponent {
     });
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Productionorder) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -237,12 +216,8 @@ export class ProductionorderComponent {
     }
     else{
       this.productionorder = this.form.getRawValue();
-      //console.log("Photo-Before"+this.productionorder.photo);
-      //this.productionorder.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.productionorder.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.productionorder.number;
-      // proddata = proddata + "<br>Name is : "+ this.productionorder.name;
+      proddata = proddata + "<br>Production order number is : "+ this.productionorder.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Productionorder Add", message: "Are you sure to Add the following Productionorder? <br> <br>"+ proddata}
@@ -251,7 +226,6 @@ export class ProductionorderComponent {
       let addmessage:string="Server Not Found";
       confirm.afterClosed().subscribe(async result => {
         if(result){
-          // console.log("ProductionorderService.add(emp)");
           this.pos.add(this.productionorder).then((response: []|undefined) => {
             console.log("Res-"+response);
             console.log("Un-"+response==undefined);
@@ -273,7 +247,6 @@ export class ProductionorderComponent {
             if(addstatus) {
               addmessage = "Successfully Saved";
               this.form.reset();
-              //this.clearImage();
               this.loadTable("");
             }
             const stsmsg = this.dg.open(MessageComponent, {
@@ -302,23 +275,21 @@ export class ProductionorderComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent){}
+
 
   fillForm(productionorder:Productionorder) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=productionorder;
 
     this.productionorder = JSON.parse(JSON.stringify(productionorder));
     this.oldproductionorder = JSON.parse(JSON.stringify(productionorder));
 
-    /*if (this.productionorder.image != null) {
-    this.imageempurl = btoa(this.productionorder.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.productionorder.image = "";
     //@ts-ignore
     this.productionorder.product = this.products.find(g => g.id === this.productionorder.product.id);
     //@ts-ignore
@@ -328,6 +299,7 @@ export class ProductionorderComponent {
 
     this.form.patchValue(this.productionorder);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -353,8 +325,6 @@ export class ProductionorderComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.productionorder = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.productionorder.image = btoa(this.imageempurl);
-            //else this.productionorder.image = this.oldproductionorder.image;
             //@ts-ignore
             this.productionorder.id = this.oldproductionorder.id;
             this.pos.update(this.productionorder).then((response: [] | undefined) => {

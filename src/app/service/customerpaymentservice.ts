@@ -24,7 +24,7 @@ export class CustomerpaymentService {
   }
 
   async add(customerpayment: Customerpayment): Promise<[]|undefined>{
-    //console.log("Customerpayment Adding-"+JSON.stringify(customerpayment));
+    console.log("Customerpayment Adding-"+JSON.stringify(customerpayment));
     return this.http.post<[]>('http://localhost:8080/customerpayments', customerpayment).toPromise();
   }
 

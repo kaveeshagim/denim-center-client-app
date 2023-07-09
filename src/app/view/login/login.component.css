@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
+
+
 mat-card {
   width: 30%;
   border: #071f35;
@@ -8,7 +10,6 @@ mat-card {
   background-color: #f7fafe;
   top: 30px;
   right: 280px;
-
 
 }
 
@@ -23,10 +24,6 @@ mat-card-header {
   height: 150px;
 }
 
-mat-card-title img {
-  width: 100%;
-  height: 100%;
-}
 
 mat-card-title p {
   color: white;
@@ -68,4 +65,11 @@ button[btn-a] {
 button[btn-b] {
   background: #24496b !important;
 }
+
+
+
+
+
+
+
 

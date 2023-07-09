@@ -1,22 +1,24 @@
 import {Component, ViewChild} from '@angular/core';
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
-import {Customerpayment} from "../../../entity/customerpayment";
 import {MatTableDataSource} from "@angular/material/table";
 import {MatPaginator} from "@angular/material/paginator";
-import {Customer} from "../../../entity/customer";
 import {Paymentstatus} from "../../../entity/paymentstatus";
 import {UiAssist} from "../../../util/ui/ui.assist";
-import {CustomerpaymentService} from "../../../service/customerpaymentservice";
-import {CustomerService} from "../../../service/customerservice";
 import {PaymentstatusService} from "../../../service/paymentstatusservice";
 import {RegexService} from "../../../service/regexservice";
 import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
-import {Invoice} from "../../../entity/invoice";
 import {Paymentmethod} from "../../../entity/paymentmethod";
 import {PaymentmethodService} from "../../../service/paymentmethodservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
+import {Customerpayment} from "../../../entity/customerpayment";
+import {Customer} from "../../../entity/customer";
+import {Invoice} from "../../../entity/invoice";
+import {CustomerpaymentService} from "../../../service/customerpaymentservice";
+import {CustomerService} from "../../../service/customerservice";
 import {InvoiceService} from "../../../service/invoiceservice";
 
 @Component({
@@ -30,7 +32,6 @@ export class CustomerpaymentComponent {
   headers: string[] = ['Date', 'Amount', 'Remarks', 'Customer', 'Invoice', 'Paymentmethod', 'Paymentstatus'];
   binders: string[] = ['date', 'amount', 'remarks', 'customer.companyname', 'invoice.number', 'paymentmethod.name', 'paymentstatus.name'];
 
-
   public ssearch!: FormGroup;
   public form!: FormGroup;
 
@@ -42,6 +43,8 @@ export class CustomerpaymentComponent {
   data!: MatTableDataSource<Customerpayment>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+
   imageempurl: string = 'assets/default.png';
 
   customers: Array<Customer> = [];
@@ -59,10 +62,11 @@ export class CustomerpaymentComponent {
   uiassist:UiAssist;
   constructor(
     private cps: CustomerpaymentService,
-    private cs: CustomerService,
+    private ss: CustomerService,
     private is: InvoiceService,
     private pms: PaymentmethodService,
     private pss: PaymentstatusService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -89,6 +93,7 @@ export class CustomerpaymentComponent {
       "invoice": new FormControl('', [Validators.required]),
       "paymentmethod": new FormControl('', [Validators.required]),
       "paymentstatus": new FormControl('', [Validators.required]),
+
     }, {updateOn: 'change'});
   }
 
@@ -99,7 +104,7 @@ export class CustomerpaymentComponent {
   initialize() {
     this.createView();
 
-    this.cs.getAllList().then((gens: Customer[]) => {
+    this.ss.getAllList().then((gens: Customer[]) => {
       this.customers = gens;
       console.log("G-" + this.customers);
     });
@@ -116,17 +121,13 @@ export class CustomerpaymentComponent {
       console.log("A-" + this.paymentmethods);
     });
 
-    /*this.rs.get('customerpayment').then((regs: []) => {
-      this.regexes = regs;
-      console.log("R-" + this.regexes['number']['regex']);*/
-      this.createForm();
-   // });
+    this.createForm();
+
 
     this.createSearch();
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -135,7 +136,7 @@ export class CustomerpaymentComponent {
   createForm(){
     this.form.controls['date'].setValidators([Validators.required]);
     this.form.controls['amount'].setValidators([Validators.required]);
-    //this.form.controls['remarks'].setValidators([Validators.required]);
+    // this.form.controls['remarks'].setValidators([Validators.required]);
     this.form.controls['invoice'].setValidators([Validators.required]);
     this.form.controls['customer'].setValidators([Validators.required]);
     this.form.controls['paymentmethod'].setValidators([Validators.required]);
@@ -145,8 +146,6 @@ export class CustomerpaymentComponent {
       this.updateAmount(selectedInvoice);
     });
 
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -163,16 +162,18 @@ export class CustomerpaymentComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldcustomerpayment = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -180,11 +181,9 @@ export class CustomerpaymentComponent {
     this.cps.getAll(query)
       .then((prods: Customerpayment[]) => {
         this.customerpayments = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.customerpayments);
@@ -242,27 +241,6 @@ export class CustomerpaymentComponent {
     }
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Customerpayment) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -274,12 +252,8 @@ export class CustomerpaymentComponent {
     }
     else{
       this.customerpayment = this.form.getRawValue();
-      //console.log("Photo-Before"+this.customerpayment.photo);
-      //this.customerpayment.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.customerpayment.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.customerpayment.id;
-      proddata = proddata + "<br>Name is : "+ this.customerpayment.invoice.number;
+      proddata = proddata + "<br>Invoice number is : "+ this.customerpayment.invoice.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Customerpayment Add", message: "Are you sure to Add the following Customerpayment? <br> <br>"+ proddata}
@@ -339,23 +313,22 @@ export class CustomerpaymentComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+  }
+
 
   fillForm(customerpayment:Customerpayment) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=customerpayment;
 
     this.customerpayment = JSON.parse(JSON.stringify(customerpayment));
     this.oldcustomerpayment = JSON.parse(JSON.stringify(customerpayment));
 
-    /*if (this.customerpayment.image != null) {
-    this.imageempurl = btoa(this.customerpayment.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.customerpayment.image = "";
     //@ts-ignore
     this.customerpayment.customer = this.customers.find(g => g.id === this.customerpayment.customer.id);
     //@ts-ignore
@@ -366,10 +339,9 @@ export class CustomerpaymentComponent {
     this.customerpayment.invoice = this.invoices.find(a => a.id === this.customerpayment.invoice.id);
 
 
-
-
     this.form.patchValue(this.customerpayment);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -395,8 +367,6 @@ export class CustomerpaymentComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.customerpayment = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.customerpayment.image = btoa(this.imageempurl);
-            //else this.customerpayment.image = this.oldcustomerpayment.image;
             //@ts-ignore
             this.customerpayment.id = this.oldcustomerpayment.id;
             this.cps.update(this.customerpayment).then((response: [] | undefined) => {
@@ -514,6 +484,4 @@ export class CustomerpaymentComponent {
       }
     });
   }
-
-
 }

@@ -16,6 +16,8 @@ import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {UiAssist} from "../../../util/ui/ui.assist";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {DatePipe} from "@angular/common";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-employee',
@@ -39,6 +41,7 @@ export class EmployeeComponent {
   imageurl: string = '';
   data !: MatTableDataSource<Employee>;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   enaadd:boolean  = false;
@@ -58,6 +61,7 @@ export class EmployeeComponent {
     private gs: GenderService,
     private ds: DepartmentService,
     private ss: EmpstatusService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -78,8 +82,8 @@ export class EmployeeComponent {
       "lastname": new FormControl('', [Validators.required, Validators.pattern("^([A-Z][a-z]+)$")]),
       "gender": new FormControl('', [Validators.required]),
       "mobile": new FormControl('', [Validators.required, Validators.pattern("^0\\d{9}$")]),
-      "land": new FormControl('', [Validators.required, Validators.pattern("^0\\d{9}$")]),
-      "email": new FormControl('', [Validators.required, Validators.pattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$")]),
+      "land": new FormControl('', [ Validators.pattern("^0\\d{9}$")]),
+      "email": new FormControl('', [ Validators.pattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$")]),
       "dob": new FormControl('', [Validators.required, this.validateDob]),
       "doj": new FormControl('', [Validators.required]),
       "address": new FormControl('', [Validators.required]),
@@ -121,7 +125,6 @@ export class EmployeeComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -133,8 +136,8 @@ export class EmployeeComponent {
     this.form.controls['lastname'].setValidators([Validators.required,Validators.pattern(this.regexes['lastname']['regex'])]);
     this.form.controls['gender'].setValidators([Validators.required]);
     this.form.controls['mobile'].setValidators([Validators.required,Validators.pattern(this.regexes['mobile']['regex'])]);
-    this.form.controls['land'].setValidators([Validators.required,Validators.pattern(this.regexes['land']['regex'])]);
-    this.form.controls['email'].setValidators([Validators.required,Validators.pattern(this.regexes['email']['regex'])]);
+    this.form.controls['land'].setValidators([Validators.pattern(this.regexes['land']['regex'])]);
+    this.form.controls['email'].setValidators([Validators.pattern(this.regexes['email']['regex'])]);
     this.form.controls['dob'].setValidators([
       Validators.required,
       this.validateDob.bind(this) // Bind the validation function to the component context
@@ -192,7 +195,11 @@ export class EmployeeComponent {
     this.form.reset();
     this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(true, false, false);
+    }else{
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -200,11 +207,9 @@ export class EmployeeComponent {
     this.es.getAll(query)
       .then((emps: Employee[]) => {
         this.employees = emps;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.employees);
@@ -345,9 +350,15 @@ export class EmployeeComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent){}
+
   fillForm(employee:Employee) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(false, true, true);
+    }else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=employee;
 
     this.employee = JSON.parse(JSON.stringify(employee));
@@ -370,6 +381,7 @@ export class EmployeeComponent {
 
     this.form.patchValue(this.employee);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

@@ -12,6 +12,12 @@ import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
+import {Role} from "../../../entity/role";
+import {RoleService} from "../../../service/roleservice";
+import {Gender} from "../../../entity/gender";
+import {Userrole} from "../../../entity/userrole";
 
 @Component({
   selector: 'app-user',
@@ -19,9 +25,9 @@ import {MessageComponent} from "../../../util/dialog/message/message.component";
   styleUrls: ['./user.component.css']
 })
 export class UserComponent {
-  columns: string[] = ['username', 'password', 'docreated', 'userstatus'];
-  headers: string[] = ['Username', 'Password', 'Datecreated', 'Userstatus'];
-  binders: string[] = ['username', 'password', 'docreated', 'userstatus.name'];
+  columns: string[] = ['username', 'password'];
+  headers: string[] = ['Username', 'Password'];
+  binders: string[] = ['username', 'password'];
 
   public ssearch!: FormGroup;
   public form!: FormGroup;
@@ -31,25 +37,28 @@ export class UserComponent {
 
   selectedrow: any;
   users: Array<User> = [];
+  roles: Array<Role> = [];
+  userroles: Array<Userrole> = [];
   data!: MatTableDataSource<User>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
-  userstatuses: Array<Userstatus> = [];
-
-  enaadd:boolean  = false;
+  enaadd:boolean = false;
   enaupd:boolean = false;
   enadel:boolean = false;
 
   regexes: any;
   uiassist:UiAssist;
+  oldroles:Array<Role>=[];
   constructor(
     private us: UserService,
-    private uss: UserstatusService,
+    private rls: RoleService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
+    private ts: TokenStorageService,
     private dg: MatDialog ) {
 
     this.uiassist = new UiAssist(this);
@@ -57,7 +66,6 @@ export class UserComponent {
 
     this.ssearch = this.fb.group({
       "ssusername": new FormControl(),
-      "ssuserstatus": new FormControl(),
 
 
     });
@@ -65,8 +73,6 @@ export class UserComponent {
     this.form = this.fb.group({
       "username": new FormControl('', [Validators.required]),
       "password": new FormControl('', [Validators.required]),
-      "docreated": new FormControl('', [Validators.required]),
-      "userstatus": new FormControl('', [Validators.required]),
 
     }, {updateOn: 'change'});
   }
@@ -78,16 +84,11 @@ export class UserComponent {
   initialize() {
     this.createView();
 
-    this.uss.getAllList().then((ists: Userstatus[]) => {
-      this.userstatuses = ists;
-      console.log("C-" + this.userstatuses);
-    });
-
     this.rs.get('user').then((regs: []) => {
       this.regexes = regs;
-      //console.log("R-" + this.regexes['number']['regex']);
       this.createForm();
     });
+
 
     this.createSearch();
   }
@@ -97,16 +98,12 @@ export class UserComponent {
     this.loadTable("");
   }
 
+
   createSearch(){ }
 
   createForm(){
     this.form.controls['username'].setValidators([Validators.required]);
     this.form.controls['password'].setValidators([Validators.required]);
-    this.form.controls['docreated'].setValidators([Validators.required]);
-    this.form.controls['userstatus'].setValidators([Validators.required]);
-
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -123,7 +120,6 @@ export class UserComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
@@ -131,19 +127,45 @@ export class UserComponent {
     this.olduser = undefined;
     this.form.reset();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(true, false, false);
+    }else{
+      this.enableButtons(false, false, false);
+    }
+
     this.selectedrow = null;
   }
+
+
+
+  onTabChange(event: MatTabChangeEvent) {
+  }
+
+  fillForm(user:User) {
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN")){
+      this.enableButtons(false, true, true);
+    }else {
+      this.enableButtons(false, false, false);
+    }
+    this.selectedrow=user;
+
+    this.user = JSON.parse(JSON.stringify(user));
+    this.olduser = JSON.parse(JSON.stringify(user));
+    this.form.patchValue(this.user);
+    this.form.markAsPristine();
+
+    // Switch to the first tab (index 0)
+    this.tabGroup.selectedIndex = 0;
+  }
+
 
   loadTable(query:string){
     this.us.getAll(query)
       .then((prods: User[]) => {
         this.users = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.users);
@@ -153,17 +175,9 @@ export class UserComponent {
 
   btnSearchMc(): void {
     const ssearchdata = this.ssearch.getRawValue();
-
     let username = ssearchdata.ssusername;
-    let userstatusid = ssearchdata.ssuserstatus;
-
-
     let query="";
-
     if(username!=null) query=query+"&username="+username;
-    if(userstatusid!=null) query=query+"&userstatusid="+userstatusid;
-
-
     if(query!="") query = query.replace(/^./, "?")
     this.loadTable(query);
   }
@@ -183,39 +197,6 @@ export class UserComponent {
     });
   }
 
-  /* selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: User) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-  /*filterTable(): void {
-
-    const csearchdata = this.csearch.getRawValue();
-
-    this.data.filterPredicate = (user: User, filter: string) => {
-
-      return (csearchdata.csusername == null || user.username.toLowerCase().includes(csearchdata.csusername)) &&
-        (csearchdata.csuserstatus == null || user.userstatus.name.toLowerCase().includes(csearchdata.csuserstatus))
-
-    }
-
-    this.data.filter = 'xx';
-  }*/
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -227,12 +208,8 @@ export class UserComponent {
     }
     else{
       this.user = this.form.getRawValue();
-      //console.log("Photo-Before"+this.user.photo);
-      //this.user.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.user.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.user.username;
-      //proddata = proddata + "<br>Name is : "+ this.user.name;
+      proddata = proddata + "<br>Username is : "+ this.user.username;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - User Add", message: "Are you sure to Add the following User? <br> <br>"+ proddata}
@@ -241,7 +218,6 @@ export class UserComponent {
       let addmessage:string="Server Not Found";
       confirm.afterClosed().subscribe(async result => {
         if(result){
-          // console.log("UserService.add(emp)");
           this.us.add(this.user).then((response: []|undefined) => {
             console.log("Res-"+response);
             console.log("Un-"+response==undefined);
@@ -292,30 +268,6 @@ export class UserComponent {
 
   }
 
-
-  fillForm(user:User) {
-
-    this.enableButtons(false, true, true);
-    this.selectedrow=user;
-
-    this.user = JSON.parse(JSON.stringify(user));
-    this.olduser = JSON.parse(JSON.stringify(user));
-
-    /*if (this.user.image != null) {
-      this.imageempurl = btoa(this.user.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.user.image = "";
-    //@ts-ignore
-    this.user.userstatus = this.userstatuses.find(t => t.id === this.user.userstatus.id);
-
-
-    this.form.patchValue(this.user);
-    this.form.markAsPristine();
-  }
 
   update() {
     let errors = this.getErrors();

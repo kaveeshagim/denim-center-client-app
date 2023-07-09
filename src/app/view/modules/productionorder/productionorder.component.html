@@ -1,30 +1,27 @@
-<mat-grid-list [cols]="12" rowHeight="4rem">
-
-  <mat-grid-tile [colspan]="4" [rowspan]="10">
+<mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event)">
+  <mat-tab label="Production Order Details">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Productionorder Detail</mat-card-title>
-      </mat-card-header>
       <mat-card-content id="productionorderform">
-        <mat-form [formGroup]="form" >
+        <mat-form [formGroup]="form">
 
           <mat-form-field appearance="outline">
             <mat-label>Number</mat-label>
-            <input matInput formControlName="number">
-            <mat-error *ngIf="this.form.controls['number'].invalid"> {{ this.regexes['number']['message'] }}</mat-error>
+            <input matInput formControlName="number" placeholder="eg: 2301">
+            <mat-error *ngIf="this.form.controls['number'].invalid">{{ this.regexes['number']['message'] }}</mat-error>
           </mat-form-field>
+
           <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Order Date</mat-label>
-            <input matInput [matDatepicker]="orderdate" formControlName="orderdate">
+            <input matInput [matDatepicker]="orderdate" formControlName="orderdate" placeholder="mm/dd/YY">
             <mat-datepicker-toggle matIconSuffix [for]="orderdate"></mat-datepicker-toggle>
             <mat-datepicker #orderdate></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Due Date</mat-label>
-            <input matInput [matDatepicker]="requireddate" formControlName="requireddate">
+            <input matInput [matDatepicker]="requireddate" formControlName="requireddate" placeholder="mm/dd/YY">
             <mat-datepicker-toggle matIconSuffix [for]="requireddate"></mat-datepicker-toggle>
             <mat-datepicker #requireddate></mat-datepicker>
           </mat-form-field>
@@ -43,14 +40,12 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Productionstatus</mat-label>
+            <mat-label>Production Status</mat-label>
             <mat-select formControlName="productionstatus">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let productionstatus of productionstatuses"
-                          [value]="productionstatus">{{productionstatus.name}}</mat-option>
+              <mat-option *ngFor="let productionstatus of productionstatuses" [value]="productionstatus">{{productionstatus.name}}</mat-option>
             </mat-select>
           </mat-form-field>
-
 
           <div id="butpanel">
             <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
@@ -60,15 +55,11 @@
           </div>
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
+  </mat-tab>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="4">
+  <mat-tab label="Production Order Search & Table">
     <mat-card id="ssearch">
-      <mat-card-header>
-        <mat-card-title>Productionorder Search</mat-card-title>
-      </mat-card-header>
       <mat-card-content>
         <mat-form [formGroup]="ssearch">
 
@@ -86,7 +77,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Search by Productionstatus</mat-label>
+            <mat-label>Search by Production Status</mat-label>
             <mat-select formControlName="ssproductionstatus">
               <mat-option [value]="null" selected>Not Selected</mat-option>
               <mat-option *ngFor="let productionstatus of productionstatuses" [value]="productionstatus.id">{{productionstatus.name}}</mat-option>
@@ -97,49 +88,25 @@
             <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
             <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>reproductionorder</mat-icon>Clear Search</button>
           </div>
-
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="6">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Productionorder Table</mat-card-title>
-        <div id="loading">
-          <img [src]="imageurl">
-        </div>
-      </mat-card-header>
       <mat-card-content>
-        <mat-table [dataSource]="data" class="mat-elevation-z8 demo-table">
+        <mat-table [dataSource]="data" class="mat-elevation-z8">
 
           <ng-container *ngFor="let column of columns;let i = index;" [matColumnDef]="column">
-            <mat-header-cell *matHeaderCellDef> {{headers[i]}} </mat-header-cell>
-            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
+            <mat-header-cell *matHeaderCellDef>{{headers[i]}}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }}</mat-cell>
           </ng-container>
 
-
-
-
           <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
-
           <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
 
         </mat-table>
         <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
       </mat-card-content>
     </mat-card>
-  </mat-grid-tile>
-
-
-</mat-grid-list>
-
-
-
-
-
-
-
-
+  </mat-tab>
+</mat-tab-group>

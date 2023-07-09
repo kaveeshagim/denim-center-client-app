@@ -18,6 +18,8 @@ import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-supplierpayment',
@@ -41,13 +43,14 @@ export class SupplierpaymentComponent {
   data!: MatTableDataSource<Supplierpayment>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+
   imageempurl: string = 'assets/default.png';
 
   suppliers: Array<Supplier> = [];
   grns: Array<Grn> = [];
   paymentmethods: Array<Paymentmethod> = [];
   paymentstatuses: Array<Paymentstatus> = [];
-
 
 
   enaadd:boolean  = false;
@@ -62,6 +65,7 @@ export class SupplierpaymentComponent {
     private gs: GrnService,
     private pms: PaymentmethodService,
     private pss: PaymentstatusService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -116,17 +120,13 @@ export class SupplierpaymentComponent {
       console.log("A-" + this.paymentmethods);
     });
 
-    //this.rs.get('supplierpayment').then((regs: []) => {
-     // this.regexes = regs;
-     // console.log("R-" + this.regexes['number']['regex']);
       this.createForm();
-    //});
+
 
     this.createSearch();
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -146,8 +146,6 @@ export class SupplierpaymentComponent {
     });
 
 
-   // Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
       control.valueChanges.subscribe(value => {
@@ -163,16 +161,18 @@ export class SupplierpaymentComponent {
       });
     }
 
-   // this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldsupplierpayment = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -180,11 +180,9 @@ export class SupplierpaymentComponent {
     this.sps.getAll(query)
       .then((prods: Supplierpayment[]) => {
         this.supplierpayments = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.supplierpayments);
@@ -241,25 +239,6 @@ export class SupplierpaymentComponent {
       }
     }
   }
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Supplierpayment) {
-    return element.number + '(' + element.name + ')';
-  } */
-
 
   add(){
     let errors = this.getErrors();
@@ -272,12 +251,8 @@ export class SupplierpaymentComponent {
     }
     else{
       this.supplierpayment = this.form.getRawValue();
-      //console.log("Photo-Before"+this.supplierpayment.photo);
-      //this.supplierpayment.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.supplierpayment.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.supplierpayment.id;
-      proddata = proddata + "<br>Name is : "+ this.supplierpayment.grn.number;
+      proddata = proddata + "<br>GRN Number is : "+ this.supplierpayment.grn.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Supplierpayment Add", message: "Are you sure to Add the following Supplierpayment? <br> <br>"+ proddata}
@@ -337,23 +312,22 @@ export class SupplierpaymentComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+  }
+
 
   fillForm(supplierpayment:Supplierpayment) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=supplierpayment;
 
     this.supplierpayment = JSON.parse(JSON.stringify(supplierpayment));
     this.oldsupplierpayment = JSON.parse(JSON.stringify(supplierpayment));
 
-    /*if (this.supplierpayment.image != null) {
-    this.imageempurl = btoa(this.supplierpayment.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.supplierpayment.image = "";
     //@ts-ignore
     this.supplierpayment.supplier = this.suppliers.find(g => g.id === this.supplierpayment.supplier.id);
     //@ts-ignore
@@ -364,10 +338,9 @@ export class SupplierpaymentComponent {
     this.supplierpayment.grn = this.grns.find(a => a.id === this.supplierpayment.grn.id);
 
 
-
-
     this.form.patchValue(this.supplierpayment);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -393,8 +366,6 @@ export class SupplierpaymentComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.supplierpayment = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.supplierpayment.image = btoa(this.imageempurl);
-            //else this.supplierpayment.image = this.oldsupplierpayment.image;
             //@ts-ignore
             this.supplierpayment.id = this.oldsupplierpayment.id;
             this.sps.update(this.supplierpayment).then((response: [] | undefined) => {

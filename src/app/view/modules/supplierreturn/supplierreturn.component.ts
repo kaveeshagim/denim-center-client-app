@@ -14,6 +14,8 @@ import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-supplierreturn',
@@ -24,7 +26,7 @@ export class SupplierreturnComponent {
 
   columns: string[] = ['qty', 'date', 'returncost', 'reason', 'supplier', 'grn'];
   headers: string[] = ['Qty', 'Date', 'Returncost', 'Reason', 'Supplier', 'Grn'];
-  binders: string[] = ['qty', 'date', 'returncost', 'reason', 'supplier.name', 'grn.number'];
+  binders: string[] = ['qty', 'date', 'returncost', 'reason', 'supplier.companyname', 'grn.number'];
 
   public ssearch!: FormGroup;
   public form!: FormGroup;
@@ -37,6 +39,7 @@ export class SupplierreturnComponent {
   data!: MatTableDataSource<Supplierreturn>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   suppliers: Array<Supplier> = [];
@@ -55,6 +58,7 @@ export class SupplierreturnComponent {
     private ss: SupplierService,
     private gs: GrnService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -108,7 +112,6 @@ export class SupplierreturnComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -122,9 +125,6 @@ export class SupplierreturnComponent {
     //this.form.controls['reason'].setValidators([Validators.required]);
     this.form.controls['returncost'].setValidators([Validators.required]);
 
-
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -141,16 +141,18 @@ export class SupplierreturnComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldsupplierreturn = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -158,11 +160,9 @@ export class SupplierreturnComponent {
     this.srs.getAll(query)
       .then((prods: Supplierreturn[]) => {
         this.supplierreturns = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.supplierreturns);
@@ -176,14 +176,10 @@ export class SupplierreturnComponent {
     let grnid = ssearchdata.ssgrn;
     let supplierid = ssearchdata.sssupplier;
 
-
-
     let query="";
 
     if(supplierid!=null) query=query+"&supplierid="+supplierid;
     if(grnid!=null) query=query+"&grnid="+grnid;
-
-
 
     if(query!="") query = query.replace(/^./, "?")
     this.loadTable(query);
@@ -204,27 +200,6 @@ export class SupplierreturnComponent {
     });
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Supplierreturn) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -236,12 +211,8 @@ export class SupplierreturnComponent {
     }
     else{
       this.supplierreturn = this.form.getRawValue();
-      //console.log("Photo-Before"+this.supplierreturn.photo);
-      //this.supplierreturn.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.supplierreturn.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Id is : "+ this.supplierreturn.id;
-      proddata = proddata + "<br>Number is : "+ this.supplierreturn.grn.number;
+      proddata = proddata + "<br>GRN number is : "+ this.supplierreturn.grn.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Supplierreturn Add", message: "Are you sure to Add the following Supplierreturn? <br> <br>"+ proddata}
@@ -250,7 +221,6 @@ export class SupplierreturnComponent {
       let addmessage:string="Server Not Found";
       confirm.afterClosed().subscribe(async result => {
         if(result){
-          // console.log("SupplierreturnService.add(emp)");
           this.srs.add(this.supplierreturn).then((response: []|undefined) => {
             console.log("Res-"+response);
             console.log("Un-"+response==undefined);
@@ -272,7 +242,6 @@ export class SupplierreturnComponent {
             if(addstatus) {
               addmessage = "Successfully Saved";
               this.form.reset();
-              //this.clearImage();
               this.loadTable("");
             }
             const stsmsg = this.dg.open(MessageComponent, {
@@ -301,33 +270,30 @@ export class SupplierreturnComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+  }
+
 
   fillForm(supplierreturn:Supplierreturn) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=supplierreturn;
 
     this.supplierreturn = JSON.parse(JSON.stringify(supplierreturn));
     this.oldsupplierreturn = JSON.parse(JSON.stringify(supplierreturn));
 
-    /*if (this.supplierreturn.image != null) {
-    this.imageempurl = btoa(this.supplierreturn.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.supplierreturn.image = "";
     //@ts-ignore
     this.supplierreturn.supplier = this.suppliers.find(g => g.id === this.supplierreturn.supplier.id);
     //@ts-ignore
     this.supplierreturn.grn = this.grns.find(a => a.id === this.supplierreturn.grn.id);
 
-
-
-
     this.form.patchValue(this.supplierreturn);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -353,10 +319,6 @@ export class SupplierreturnComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.supplierreturn = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.supplierreturn.image = btoa(this.imageempurl);
-            //else { // @ts-ignore
-            // this.supplierreturn.image = this.oldsupplierreturn.image;
-          //}
             // @ts-ignore
             this.supplierreturn.id = this.oldsupplierreturn.id;
             this.srs.update(this.supplierreturn).then((response: [] | undefined) => {
@@ -368,7 +330,6 @@ export class SupplierreturnComponent {
                   updmessage = response['errors'];
                 }
               } else {
-                //console.log("undefined");
                 updstatus = false;
                 updmessage = "Content Not Found"
               }

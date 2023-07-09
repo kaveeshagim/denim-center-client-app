@@ -1,8 +1,4 @@
-mat-card {
-  width: 100%;
-  height: 100%;
-  margin: 10px 10px -10px 10px !important;
-}
+
 
 mat-card-content{
   overflow: auto;
@@ -87,9 +83,9 @@ mat-card-header {
   background-color: inherit!important;
 }
 
-/*mat-form-field .ng-dirty {
+mat-form-field .ng-dirty {
   background-color: gold;
-}*/
+}
 
 #productinventoryform mat-form-field .ng-dirty {
   background-color: gold;

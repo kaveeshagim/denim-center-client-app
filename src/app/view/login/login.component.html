@@ -1,42 +1,46 @@
+<mat-grid-list cols="8" rowHeight="8rem">
+  <mat-grid-tile colspan="8" rowspan="6">
+    <mat-card >
+      <mat-card-content *ngIf="!isLoggedIn">
 
-<mat-grid-list [cols]="8" rowHeight="8rem">
+            <form [formGroup]="loginform" *ngIf="!isLoggedIn" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate>
+              <p>Login</p>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="6">
-
-    <mat-card>
-
-      <!--<mat-card-header>
-     <mat-card-title>
-
-       <img src="/assets/logo.png">
-       </mat-card-title>
-      </mat-card-header>-->
-
-      <mat-card-content>
-
-        <form [formGroup]="loginform">
-
-          <p>Login</p>
-
-          <mat-form-field appearance="outline">
-            <mat-label>User Name</mat-label>
-            <input matInput formControlName="username" autocomplete="off">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Password</mat-label>
-            <input matInput type="password" formControlName="password">
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>User Name</mat-label>
+                <input matInput formControlName="username" type="text" required minlength="4" id="username" />
+                <mat-error *ngIf="loginform.controls['username'].errors && f.submitted">Username is required! </mat-error>
+              </mat-form-field>
 
 
-          <mat-card-actions align="end">
-            <button btn-a mat-raised-button (click)="authenticate()">Login</button>
-            <button btn-b mat-raised-button (click)="signup()">Sign Up</button>
-          </mat-card-actions>
-        </form>
+              <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput formControlName="password" type="password" required minlength="4" id="password" />
+                <mat-error *ngIf="loginform.controls['password'].errors && f.submitted">
+                  <ng-container *ngIf="loginform.controls['password'].errors['required']">
+                    Password is required
+                  </ng-container>
+                  <ng-container *ngIf="loginform.controls['password'].errors['minlength']">
+                    Password must be at least 4 characters
+                  </ng-container>
+                </mat-error>
+              </mat-form-field>
+
+              <mat-card-actions align="end">
+                <button btn-a mat-raised-button type="submit">Login</button>
+                <button btn-b mat-raised-button (click)="navigateToRegister()">SignUp</button>
+              </mat-card-actions>
+
+            </form>
+      </mat-card-content>
+
+      <mat-card-content *ngIf="isLoggedIn">
+        Logged in as {{ roles }}.
+        <button btn-a mat-raised-button (click)="navigateToHome()">Go to Home</button>
       </mat-card-content>
 
     </mat-card>
+
 
   </mat-grid-tile>
 </mat-grid-list>

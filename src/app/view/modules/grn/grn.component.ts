@@ -16,6 +16,8 @@ import {Grnstatus} from "../../../entity/grnstatus";
 import {PorderService} from "../../../service/porderservice";
 import {SupplierService} from "../../../service/supplierservice";
 import {GrnstatusService} from "../../../service/grnstatusservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-grn',
@@ -41,6 +43,7 @@ export class GrnComponent {
   data!: MatTableDataSource<Grn>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   porders: Array<Porder> = [];
@@ -58,6 +61,7 @@ export class GrnComponent {
     private ps: PorderService,
     private ss: SupplierService,
     private gss: GrnstatusService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -118,7 +122,6 @@ export class GrnComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -139,8 +142,6 @@ export class GrnComponent {
     });
 
 
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
       control.valueChanges.subscribe(value => {
@@ -156,7 +157,7 @@ export class GrnComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
+
     this.loadForm();
   }
 
@@ -165,7 +166,11 @@ export class GrnComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -173,11 +178,9 @@ export class GrnComponent {
     this.gs.getAll(query)
       .then((prods: Grn[]) => {
         this.grns = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.grns);
@@ -253,28 +256,6 @@ export class GrnComponent {
   }
 
 
-
-  /* selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Grn) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -286,12 +267,8 @@ export class GrnComponent {
     }
     else{
       this.grn = this.form.getRawValue();
-      //console.log("Photo-Before"+this.grn.photo);
-      //this.grn.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.grn.photo);
       let proddata: string = "";
       proddata = proddata + "<br>Number is : "+ this.grn.number;
-      //proddata = proddata + "<br>Name is : "+ this.grn.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Grn Add", message: "Are you sure to Add the following Grn? <br> <br>"+ proddata}
@@ -351,23 +328,19 @@ export class GrnComponent {
 
   }
 
-
+  onTabChange(event: MatTabChangeEvent) {}
   fillForm(grn:Grn) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=grn;
 
     this.grn = JSON.parse(JSON.stringify(grn));
     this.oldgrn = JSON.parse(JSON.stringify(grn));
 
-    /*if (this.grn.image != null) {
-      this.imageempurl = btoa(this.grn.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.grn.image = "";
     //@ts-ignore
     this.grn.porder = this.porders.find(p => p.id === this.grn.porder.id);
     //@ts-ignore
@@ -378,6 +351,7 @@ export class GrnComponent {
 
     this.form.patchValue(this.grn);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -403,8 +377,6 @@ export class GrnComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.grn = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.grn.image = btoa(this.imageempurl);
-            //else this.grn.image = this.oldgrn.image;
             //@ts-ignore
             this.grn.id = this.oldgrn.id;
             this.gs.update(this.grn).then((response: [] | undefined) => {

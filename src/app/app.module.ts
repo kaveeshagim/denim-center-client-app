@@ -24,7 +24,7 @@ import {MessageComponent} from "./util/dialog/message/message.component";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatTableModule} from "@angular/material/table";
 import {MatPaginatorModule} from "@angular/material/paginator";
-import {HttpClientModule} from "@angular/common/http";
+import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
 import {MatSelectModule} from "@angular/material/select";
 import { ProductComponent } from './view/modules/product/product.component';
 import { MaterialComponent } from './view/modules/material/material.component';
@@ -79,6 +79,17 @@ import { ProductinventoryreportComponent } from './report/view/productinventoryr
 import { MaterialinventoryreportComponent } from './report/view/materialinventoryreport/materialinventoryreport.component';
 import { IncomeexpenseComponent } from './report/view/incomeexpense/incomeexpense.component';
 import { IncomeComponent } from './report/view/income/income.component';
+import { BoardAdminComponent } from './view/board-admin/board-admin.component';
+import { BoardManagerComponent } from './view/board-manager/board-manager.component';
+import { BoardExecutiveComponent } from './view/board-executive/board-executive.component';
+import { ProfileComponent } from './view/profile/profile.component';
+import { RegisterComponent } from './view/register/register.component';
+import {AuthInterceptor, authInterceptorProviders} from "./view/helpers/auth.interceptor";
+import {MatTabsModule} from "@angular/material/tabs";
+import { PrivilegeComponent } from './view/modules/privilege/privilege.component';
+import {MatRadioModule} from "@angular/material/radio";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 
 
 @NgModule({
@@ -109,7 +120,6 @@ import { IncomeComponent } from './report/view/income/income.component';
     CorderComponent,
     PorderComponent,
     ConfirmComponent,
-    BillofmaterialComponent,
     ProductmovementComponent,
     MaterialmovementComponent,
     CountbyproductionstatusComponent,
@@ -120,7 +130,13 @@ import { IncomeComponent } from './report/view/income/income.component';
     ProductinventoryreportComponent,
     MaterialinventoryreportComponent,
     IncomeexpenseComponent,
-    IncomeComponent
+    IncomeComponent,
+    BoardAdminComponent,
+    BoardManagerComponent,
+    BoardExecutiveComponent,
+    ProfileComponent,
+    RegisterComponent,
+    PrivilegeComponent
   ],
     imports: [
         MatTableModule,
@@ -148,13 +164,25 @@ import { IncomeComponent } from './report/view/income/income.component';
         MatSlideToggleModule,
         FormsModule,
         MatChipsModule,
+        MatTabsModule,
+        MatRadioModule,
+        MatMenuModule,
+        MatCheckboxModule,
     ],
-  providers: [EmployeeService, ProductService, MaterialService, CorderService,
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    },
+
+    EmployeeService, ProductService, MaterialService, CorderService,
     PorderService, GrnService, InvoiceService,
     CustomerpaymentService, SupplierpaymentService, CustomerService, SupplierService,
     UserService, MaterialinventoryService, MaterialmovementService, ProductinventoryService,
     ProductmovementService, ProductionorderService,
-    CustomerreturnService, SupplierreturnService, DatePipe],
+    CustomerreturnService, SupplierreturnService, DatePipe, authInterceptorProviders
+    ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

@@ -1,12 +1,8 @@
-<mat-grid-list [cols]="12" rowHeight="4rem">
-
-  <mat-grid-tile [colspan]="4" [rowspan]="10">
+<mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event)">
+  <mat-tab label="Employee Detail">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Employee Detail</mat-card-title>
-      </mat-card-header>
       <mat-card-content id="employeeform">
-        <mat-form [formGroup]="form" >
+        <mat-form [formGroup]="form">
 
           <mat-form-field appearance="outline">
             <mat-label>First Name</mat-label>
@@ -14,7 +10,9 @@
             <mat-error *ngIf="form.controls['firstname'].invalid && form.controls['firstname'].value !== '' && (form.controls['firstname'].touched || form.controls['firstname'].dirty)">
               {{ regexes['firstname']['message'] }}
             </mat-error>
-          </mat-form-field> <p></p>
+          </mat-form-field>
+
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Last Name</mat-label>
@@ -22,7 +20,9 @@
             <mat-error *ngIf="form.controls['lastname'].invalid && form.controls['lastname'].value !== '' && (form.controls['lastname'].touched || form.controls['lastname'].dirty)">
               {{ regexes['lastname']['message'] }}
             </mat-error>
-          </mat-form-field><p></p>
+          </mat-form-field>
+
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Gender</mat-label>
@@ -37,40 +37,39 @@
             <input matInput formControlName="mobile">
             <mat-error *ngIf="form.controls['mobile'].invalid && form.controls['mobile'].value !== '' && (form.controls['mobile'].touched || form.controls['mobile'].dirty)">
               {{ regexes['mobile']['message'] }}</mat-error>
-          </mat-form-field><p></p>
+          </mat-form-field>
+
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Land No</mat-label>
             <input matInput formControlName="land">
             <mat-error *ngIf="form.controls['land'].invalid && form.controls['land'].value !== '' && (form.controls['land'].touched || form.controls['land'].dirty)">
               {{ regexes['land']['message'] }}</mat-error>
-          </mat-form-field><p></p>
+          </mat-form-field>
+
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Email</mat-label>
-            <input matInput formControlName="email" placeholder="Ex. abc@example.com">
+            <input matInput formControlName="email" placeholder="eg: abc@example.com">
           </mat-form-field>
 
-          <!--<mat-form-field appearance="outline">
+          <mat-form-field appearance="outline">
             <mat-label>Birth Date</mat-label>
-            <input matInput [matDatepicker]="dob" formControlName="dob">
-            <mat-datepicker-toggle matIconSuffix [for]="dob"></mat-datepicker-toggle>
-            <mat-datepicker #dob></mat-datepicker>
-          </mat-form-field>-->
+            <input matInput [matDatepicker]="dobPicker" formControlName="dob" placeholder="mm/dd/YY">
+            <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+            <mat-datepicker #dobPicker></mat-datepicker>
+            <mat-error *ngIf="form.controls['dob'].invalid && form.controls['dob'].touched">
+              Invalid date of birth
+            </mat-error>
+          </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Birth Date</mat-label>
-              <input matInput [matDatepicker]="dobPicker" formControlName="dob">
-              <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
-              <mat-datepicker #dobPicker></mat-datepicker>
-              <mat-error *ngIf="form.controls['dob'].invalid && form.controls['dob'].touched">
-                Invalid date of birth
-              </mat-error>
-            </mat-form-field><p></p>
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Date of Joining</mat-label>
-            <input matInput [matDatepicker]="doj" formControlName="doj">
+            <input matInput [matDatepicker]="doj" formControlName="doj" placeholder="mm/dd/YY">
             <mat-datepicker-toggle matIconSuffix [for]="doj"></mat-datepicker-toggle>
             <mat-datepicker #doj></mat-datepicker>
           </mat-form-field>
@@ -85,22 +84,23 @@
             <input matInput formControlName="nic">
             <mat-error *ngIf="form.controls['nic'].invalid && form.controls['nic'].value !== '' && (form.controls['nic'].touched || form.controls['nic'].dirty)">
               {{ regexes['nic']['message'] }}</mat-error>
-          </mat-form-field> <p></p>
+          </mat-form-field>
+
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Department</mat-label>
             <mat-select formControlName="department">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let department of departments"
-                          [value]="department">{{department.name}}</mat-option>
+              <mat-option *ngFor="let department of departments" [value]="department">{{department.name}}</mat-option>
             </mat-select>
           </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Employee Status</mat-label>
             <mat-select formControlName="empstatus">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let empstatus of empstatuses"
-                          [value]="empstatus">{{empstatus.name}}</mat-option>
+              <mat-option *ngFor="let empstatus of empstatuses" [value]="empstatus">{{empstatus.name}}</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -110,7 +110,6 @@
             <label for="userImage" id="selectbutton">Select</label>
             <label id="clearbutton" (click)="clearImage()">Clear</label>
           </div>
-
           <div id="butpanel">
             <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
             <button mat-raised-button (click)="clear()">Clear</button>
@@ -119,15 +118,11 @@
           </div>
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
+  </mat-tab>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="4">
+  <mat-tab label="Employee Search & Table">
     <mat-card id="ssearch">
-      <mat-card-header>
-        <mat-card-title>Employee Search</mat-card-title>
-      </mat-card-header>
       <mat-card-content>
         <mat-form [formGroup]="ssearch">
 
@@ -157,26 +152,15 @@
             </mat-select>
           </mat-form-field>
 
-
           <div>
             <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
             <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>reorder</mat-icon>Clear Search</button>
           </div>
-
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="6">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Employee Table</mat-card-title>
-        <div id="loading">
-          <img [src]="imageurl">
-        </div>
-      </mat-card-header>
       <mat-card-content>
         <mat-table [dataSource]="data" class="mat-elevation-z8 demo-table">
 
@@ -185,8 +169,6 @@
             <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
           </ng-container>
 
-
-
           <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
 
@@ -194,7 +176,5 @@
         <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
       </mat-card-content>
     </mat-card>
-  </mat-grid-tile>
-
-
-</mat-grid-list>
+  </mat-tab>
+</mat-tab-group>

@@ -16,6 +16,8 @@ import {SupplierService} from "../../../service/supplierservice";
 import {OrderstatusService} from "../../../service/orderstatusservice";
 import {Material} from "../../../entity/material";
 import {MaterialService} from "../../../service/materialservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-purchaseorder',
@@ -39,6 +41,7 @@ export class PorderComponent {
   data!: MatTableDataSource<Porder>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   suppliers: Array<Supplier> = [];
@@ -57,6 +60,7 @@ export class PorderComponent {
     private ss: SupplierService,
     private os: OrderstatusService,
     private ms: MaterialService,
+    private ts: TokenStorageService,
     private rs: RegexService,
     private fb: FormBuilder,
     private dp: DatePipe,
@@ -119,7 +123,6 @@ export class PorderComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -158,7 +161,6 @@ export class PorderComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
@@ -167,7 +169,11 @@ export class PorderComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -175,11 +181,9 @@ export class PorderComponent {
     this.ps.getAll(query)
       .then((prods: Porder[]) => {
         this.porders = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.porders);
@@ -244,13 +248,6 @@ export class PorderComponent {
     }
   }
 
-
-  /*getModi(element: Porder) {
-    return element.number + '(' + element.name + ')';
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -262,12 +259,8 @@ export class PorderComponent {
     }
     else{
       this.porder = this.form.getRawValue();
-      //console.log("Photo-Before"+this.porder.photo);
-      //this.porder.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.porder.photo);
       let proddata: string = "";
       proddata = proddata + "<br>Number is : "+ this.porder.number;
-     // proddata = proddata + "<br>Name is : "+ this.porder.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Porder Add", message: "Are you sure to Add the following Porder? <br> <br>"+ proddata}
@@ -327,23 +320,21 @@ export class PorderComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+  }
 
   fillForm(porder:Porder) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=porder;
 
     this.porder = JSON.parse(JSON.stringify(porder));
     this.oldporder = JSON.parse(JSON.stringify(porder));
 
-    /*if (this.porder.image != null) {
-    this.imageempurl = btoa(this.porder.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.porder.image = "";
     //@ts-ignore
     this.porder.supplier = this.suppliers.find(g => g.id === this.porder.supplier.id);
     //@ts-ignore
@@ -354,6 +345,7 @@ export class PorderComponent {
 
     this.form.patchValue(this.porder);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

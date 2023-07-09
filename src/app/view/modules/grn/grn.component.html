@@ -1,24 +1,20 @@
-<mat-grid-list [cols]="12" rowHeight="4rem">
-
-  <mat-grid-tile [colspan]="4" [rowspan]="10">
+<mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event)">
+  <mat-tab label="GRN Detail">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Grn Detail</mat-card-title>
-      </mat-card-header>
       <mat-card-content id="grnform">
-        <mat-form [formGroup]="form" >
+        <mat-form [formGroup]="form">
 
           <mat-form-field appearance="outline">
             <mat-label>Number</mat-label>
-            <input matInput formControlName="number">
-            <mat-error *ngIf="this.form.controls['number'].invalid"> {{ this.regexes['number']['message'] }}</mat-error>
+            <input matInput formControlName="number" placeholder="eg: 2301">
+            <mat-error *ngIf="this.form.controls['number'].invalid">{{ this.regexes['number']['message'] }}</mat-error>
           </mat-form-field>
-          <p></p>
 
+          <p></p>
 
           <mat-form-field appearance="outline">
             <mat-label>Date Created</mat-label>
-            <input matInput [matDatepicker]="datecreated" formControlName="datecreated">
+            <input matInput [matDatepicker]="datecreated" formControlName="datecreated" placeholder="mm/dd/YY">
             <mat-datepicker-toggle matIconSuffix [for]="datecreated"></mat-datepicker-toggle>
             <mat-datepicker #datecreated></mat-datepicker>
           </mat-form-field>
@@ -37,7 +33,6 @@
             <span matTextSuffix>.00</span>
           </mat-form-field>
 
-
           <mat-form-field appearance="outline">
             <mat-label>Purchase Order</mat-label>
             <mat-select formControlName="porder" (selectionChange)="updateSelection($event.value)">
@@ -50,8 +45,7 @@
             <mat-label>Supplier</mat-label>
             <mat-select formControlName="supplier">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let supplier of suppliers"
-                          [value]="supplier">{{supplier.companyname}}</mat-option>
+              <mat-option *ngFor="let supplier of suppliers" [value]="supplier">{{supplier.companyname}}</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -64,8 +58,7 @@
             <mat-label>Grn Status</mat-label>
             <mat-select formControlName="grnstatus">
               <mat-option [value]="null" selected>Not Selected</mat-option>
-              <mat-option *ngFor="let grnstatus of grnstatuses"
-                          [value]="grnstatus">{{grnstatus.name}}</mat-option>
+              <mat-option *ngFor="let grnstatus of grnstatuses" [value]="grnstatus">{{grnstatus.name}}</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -73,7 +66,6 @@
             <mat-label>Remarks</mat-label>
             <input matInput formControlName="remarks">
           </mat-form-field>
-
 
           <div id="butpanel">
             <button mat-raised-button (click)="add()" [disabled]="!enaadd">Add</button>
@@ -83,15 +75,11 @@
           </div>
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
+  </mat-tab>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="4">
+  <mat-tab label="GRN Search & Table">
     <mat-card id="ssearch">
-      <mat-card-header>
-        <mat-card-title>Grn Search</mat-card-title>
-      </mat-card-header>
       <mat-card-content>
         <mat-form [formGroup]="ssearch">
 
@@ -116,50 +104,29 @@
             </mat-select>
           </mat-form-field>
 
-
           <div>
             <button mat-raised-button color="primary" (click)="btnSearchMc()"><mat-icon>search</mat-icon>Search</button>
             <button mat-raised-button color="primary" (click)="btnSearchClearMc()"><mat-icon>reorder</mat-icon>Clear Search</button>
           </div>
-
         </mat-form>
       </mat-card-content>
-
     </mat-card>
-  </mat-grid-tile>
 
-  <mat-grid-tile [colspan]="8" [rowspan]="6">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>Grn Table</mat-card-title>
-        <div id="loading">
-          <img [src]="imageurl">
-        </div>
-      </mat-card-header>
       <mat-card-content>
         <mat-table [dataSource]="data" class="mat-elevation-z8 demo-table">
 
           <ng-container *ngFor="let column of columns;let i = index;" [matColumnDef]="column">
-            <mat-header-cell *matHeaderCellDef> {{headers[i]}} </mat-header-cell>
-            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }} </mat-cell>
+            <mat-header-cell *matHeaderCellDef>{{headers[i]}}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ uiassist.getProperty(element,binders[i]) }}</mat-cell>
           </ng-container>
 
-
-
-
           <mat-header-row id="th" *matHeaderRowDef="columns"></mat-header-row>
-
           <mat-row *matRowDef="let row; columns: columns;" (click)="fillForm(row)" [ngClass]="{'selected-row' : row === selectedrow}"></mat-row>
 
         </mat-table>
         <mat-paginator [length]="20" [pageSize]="5" [pageSizeOptions]="[3,5,10,20]"></mat-paginator>
       </mat-card-content>
     </mat-card>
-  </mat-grid-tile>
-
-
-</mat-grid-list>
-
-
-
-
+  </mat-tab>
+</mat-tab-group>

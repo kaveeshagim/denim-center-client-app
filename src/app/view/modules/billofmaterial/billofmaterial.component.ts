@@ -14,6 +14,8 @@ import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-billofmaterial',
@@ -39,6 +41,8 @@ export class BillofmaterialComponent {
   data!: MatTableDataSource<Billofmaterial>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   materials: Array<Material> = [];
@@ -57,6 +61,7 @@ export class BillofmaterialComponent {
     private ms: MaterialService,
     private pos: ProductionorderService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -142,7 +147,12 @@ export class BillofmaterialComponent {
     this.oldbillofmaterial = undefined;
     this.form.reset();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
+
     this.selectedrow = null;
   }
 
@@ -150,11 +160,9 @@ export class BillofmaterialComponent {
     this.bs.getAll(query)
       .then((prods: Billofmaterial[]) => {
         this.billofmaterials = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.billofmaterials);
@@ -194,12 +202,6 @@ export class BillofmaterialComponent {
     });
   }
 
-  /*
-
-  getModi(element: Billofmaterial) {
-    return element.number + '(' + element.name + ')';
-  } */
-
 
   add(){
     let errors = this.getErrors();
@@ -213,8 +215,7 @@ export class BillofmaterialComponent {
     else{
       this.billofmaterial = this.form.getRawValue();
       let proddata: string = "";
-      proddata = proddata + "<br>Id is : "+ this.billofmaterial.id;
-      proddata = proddata + "<br>Number is : "+ this.billofmaterial.productionorder.number;
+      proddata = proddata + "<br>Production order number is : "+ this.billofmaterial.productionorder.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Billofmaterial Add", message: "Are you sure to Add the following Billofmaterial? <br> <br>"+ proddata}
@@ -274,10 +275,13 @@ export class BillofmaterialComponent {
 
   }
 
-
+onTabChange(event: MatTabChangeEvent){}
   fillForm(billofmaterial:Billofmaterial) {
-
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=billofmaterial;
 
     this.billofmaterial = JSON.parse(JSON.stringify(billofmaterial));
@@ -292,6 +296,7 @@ export class BillofmaterialComponent {
 
     this.form.patchValue(this.billofmaterial);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -317,8 +322,6 @@ export class BillofmaterialComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.billofmaterial = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.billofmaterial.image = btoa(this.imageempurl);
-            //else this.billofmaterial.image = this.oldbillofmaterial.image;
             //@ts-ignore
             this.billofmaterial.id = this.oldbillofmaterial.id;
             this.bs.update(this.billofmaterial).then((response: [] | undefined) => {

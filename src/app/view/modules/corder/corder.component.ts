@@ -16,6 +16,8 @@ import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {CorderService} from "../../../service/corderservice";
 import { Product } from 'src/app/entity/product';
 import {ProductService} from "../../../service/productservice";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-customerorder',
@@ -39,12 +41,12 @@ export class CorderComponent {
   data!: MatTableDataSource<Corder>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   customers: Array<Customer> = [];
   orderstatuses: Array<Orderstatus> = [];
   products: Array<Product> = [];
-
 
   enaadd:boolean  = false;
   enaupd:boolean = false;
@@ -56,6 +58,7 @@ export class CorderComponent {
     private os: CorderService,
     private cs: CustomerService,
     private oss: OrderstatusService,
+    private ts: TokenStorageService,
     private ps: ProductService,
     private rs: RegexService,
     private fb: FormBuilder,
@@ -165,9 +168,13 @@ export class CorderComponent {
   loadForm(){
     this.oldcorder = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
+
     this.selectedrow = null;
   }
 
@@ -257,12 +264,8 @@ export class CorderComponent {
     }
     else{
       this.corder = this.form.getRawValue();
-      //console.log("Photo-Before"+this.order.photo);
-      //this.order.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.order.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.corder.number;
-      // proddata = proddata + "<br>Name is : "+ this.order.name;
+      proddata = proddata + "<br>Customer order number is : "+ this.corder.number;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Order Add", message: "Are you sure to Add the following Order? <br> <br>"+ proddata}
@@ -322,23 +325,19 @@ export class CorderComponent {
 
   }
 
-
+onTabChange(event: MatTabChangeEvent){}
   fillForm(corder:Corder) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_EXECUTIVE")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=corder;
 
     this.corder = JSON.parse(JSON.stringify(corder));
     this.oldcorder = JSON.parse(JSON.stringify(corder));
 
-    /*if (this.order.image != null) {
-    this.imageempurl = btoa(this.order.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-     this.clearImage();
-    }*/
-
-    //this.order.image = "";
     //@ts-ignore
     this.corder.customer = this.customers.find(g => g.id === this.corder.customer.id);
     //@ts-ignore
@@ -349,6 +348,7 @@ export class CorderComponent {
 
     this.form.patchValue(this.corder);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
@@ -374,8 +374,6 @@ export class CorderComponent {
         confirm.afterClosed().subscribe(async result => {
           if (result) {
             this.corder = this.form.getRawValue();
-            //if (this.form.controls['image'].dirty) this.corder.image = btoa(this.imageempurl);
-            //else this.corder.image = this.oldcorder.image;
             //@ts-ignore
             this.corder.id = this.oldcorder.id;
             this.os.update(this.corder).then((response: [] | undefined) => {
@@ -416,6 +414,8 @@ export class CorderComponent {
       }
     }
   }
+
+
 
 
 

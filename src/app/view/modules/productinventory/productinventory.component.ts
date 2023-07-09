@@ -12,6 +12,8 @@ import {DatePipe} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {ConfirmComponent} from "../../../util/dialog/confirm/confirm.component";
 import {MessageComponent} from "../../../util/dialog/message/message.component";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-productinventory',
@@ -35,6 +37,7 @@ export class ProductinventoryComponent {
   data!: MatTableDataSource<Productinventory>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   imageempurl: string = 'assets/default.png';
 
   products: Array<Product> = [];
@@ -49,6 +52,7 @@ export class ProductinventoryComponent {
     private pis: ProductinventoryService,
     private ps: ProductService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -97,7 +101,6 @@ export class ProductinventoryComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -106,12 +109,14 @@ export class ProductinventoryComponent {
   createForm(){
     this.form.controls['number'].setValidators([Validators.required,Validators.pattern(this.regexes['number']['regex'])]);
     this.form.controls['qty'].setValidators([Validators.required]);
+    // @ts-ignore
     this.form.controls['reorderlevel'].setValidators([Validators.required]);
     this.form.controls['updateddate'].setValidators([Validators.required]);
     this.form.controls['product'].setValidators([Validators.required]);
 
-
-    //Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
+    this.form.get('number')?.valueChanges.subscribe((selectedNumber) => {
+      this.updateCode(selectedNumber);
+    });
 
     for (const controlName in this.form.controls) {
       const control = this.form.controls[controlName];
@@ -128,28 +133,53 @@ export class ProductinventoryComponent {
       });
     }
 
-    //this.enableButtons(true, false, false);
     this.loadForm();
   }
 
   loadForm(){
     this.oldproductinventory = undefined;
     this.form.reset();
-    //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
+
+  /*validateReorderLevel(): { invalidReorderLevel: boolean } | null{
+    const reorderLevel = this.form.value('reorderlevel');
+    const qty = this.form.value('qty');
+    if (reorderLevel < qty) {
+      return {invalidReorderLevel: true};
+    }else{
+      return null;
+    }
+  }*/
+
+  updateCode(selectedNumber: any) {
+    console.log("Selected Product:", selectedNumber);
+    const unitNumberControl = this.form.get('product');
+
+    if (unitNumberControl) {
+      if (selectedNumber) {
+        const codex = selectedNumber.code;
+        unitNumberControl.setValue(codex);
+      } else {
+        unitNumberControl.reset();
+      }
+    }
+  }
+
 
   loadTable(query:string){
     this.pis.getAll(query)
       .then((prods: Productinventory[]) => {
         this.productinventories = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.productinventories);
@@ -188,27 +218,6 @@ export class ProductinventoryComponent {
     });
   }
 
-  /*selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  }
-
-  getModi(element: Productinventory) {
-    return element.number + '(' + element.name + ')';
-  }*/
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -220,20 +229,19 @@ export class ProductinventoryComponent {
     }
     else{
       this.productinventory = this.form.getRawValue();
-      //console.log("Photo-Before"+this.productinventory.photo);
-      //this.productinventory.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.productinventory.photo);
       let proddata: string = "";
-      proddata = proddata + "<br>Number is : "+ this.productinventory.number;
-      proddata = proddata + "<br>Name is : "+ this.productinventory.product.name;
+      proddata = proddata + "<br>Product inventory umber is : "+ this.productinventory.number;
+      proddata = proddata + "<br>Product name is : "+ this.productinventory.product.name;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Productinventory Add", message: "Are you sure to Add the following Productinventory? <br> <br>"+ proddata}
       });
+
       let addstatus:boolean=false;
       let addmessage:string="Server Not Found";
       confirm.afterClosed().subscribe(async result => {
         if(result){
+
           // console.log("ProductinventoryService.add(emp)");
           this.pis.add(this.productinventory).then((response: []|undefined) => {
             console.log("Res-"+response);
@@ -268,7 +276,6 @@ export class ProductinventoryComponent {
       });
     }
   }
-
   getErrors(): string {
     let errors: string = "";
     for (const controlName in this.form.controls) {
@@ -285,29 +292,37 @@ export class ProductinventoryComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {
+    const tabIndex = event.index;
+    // Perform actions based on the selected tab index
+    if (tabIndex === 0) {
+      // Do something when the first tab is selected
+    } else if (tabIndex === 1) {
+      // Do something when the second tab is selected
+    } else if (tabIndex === 2) {
+      // Do something when the third tab is selected
+    }
+    // Add more conditions for other tabs if needed
+  }
 
   fillForm(productinventory:Productinventory) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=productinventory;
 
     this.productinventory = JSON.parse(JSON.stringify(productinventory));
     this.oldproductinventory = JSON.parse(JSON.stringify(productinventory));
-
-    /*if (this.productinventory.image != null) {
-      this.imageempurl = btoa(this.productinventory.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    }*/
-
-    //this.productinventory.image = "";
     //@ts-ignore
     this.productinventory.product = this.products.find(g => g.id === this.productinventory.product.id);
 
 
     this.form.patchValue(this.productinventory);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {

@@ -1,0 +1,159 @@
+<mat-toolbar>
+  <mat-toolbar-row>
+
+    <span class="toolbar-left">
+    <button mat-icon-button (click)="opened=!opened" class="btn-nav"><mat-icon>menu</mat-icon></button>
+     <img src="/assets/logo.png" class="img-logo">
+    </span>
+
+
+
+    <span class="toolbar-right">
+  <label class="lbl-user">Admin</label>
+
+    <img src="assets/user.png" alt="User" routerLink="profile" class="img-user" />
+
+  <button mat-icon-button (click)="logout()" class="btn-logout">
+    <mat-icon>exit_to_app</mat-icon>
+  </button>
+  </span>
+
+
+
+
+  </mat-toolbar-row>
+</mat-toolbar>
+
+<mat-sidenav-container >
+
+  <mat-sidenav [(opened)]="opened" mode="side">
+
+    <mat-nav-list>
+      <mat-list-item><a routerLink="home">
+        <mat-icon>home</mat-icon>
+        Home</a></mat-list-item>
+      <mat-list-item><a>
+        <mat-icon>widgets</mat-icon>
+        <a routerLink="dashboard">
+          Dashboard</a></a></mat-list-item>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>person</mat-icon>
+            Admin</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-list-item><a routerLink="user">User</a></mat-list-item>
+        <mat-list-item><a routerLink="employee">Employees</a></mat-list-item>
+        <mat-list-item><a routerLink="supplier">Suppliers</a></mat-list-item>
+        <mat-list-item><a routerLink="customer">Customers</a></mat-list-item>
+        <mat-list-item><a routerLink="privilege">Privilege</a></mat-list-item>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>shop</mat-icon>
+            Denim</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-list-item><a routerLink="product">Products</a></mat-list-item>
+        <mat-list-item><a routerLink="material">Materials</a></mat-list-item>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <a>Production Order</a>
+          </mat-expansion-panel-header>
+          <mat-list-item><a routerLink="productionorder">Production Order</a></mat-list-item>
+          <mat-list-item><a routerLink="billofmaterial">Bill of Materials</a></mat-list-item>
+        </mat-expansion-panel>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>add_shopping_cart</mat-icon>
+            Order</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-list-item><a routerLink="customerorder">Customer Order</a></mat-list-item>
+        <mat-list-item><a routerLink="purchaseorder">Purchase Order</a></mat-list-item>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>store</mat-icon>
+            Inventory</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-list-item><a routerLink="productinventory">Product Inventory</a></mat-list-item>
+        <mat-list-item><a routerLink="productmovement">Product Movement</a></mat-list-item>
+        <mat-list-item><a routerLink="materialinventory">Material Inventory</a></mat-list-item>
+        <mat-list-item><a routerLink="materialmovement">Material Movement</a></mat-list-item>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>class</mat-icon>
+            Payments</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-list-item><a routerLink="customerpayment">Customer Payment</a></mat-list-item>
+        <mat-list-item><a routerLink="invoice">Invoice</a></mat-list-item>
+        <mat-list-item><a routerLink="supplierpayment">Supplier Payment</a></mat-list-item>
+        <mat-list-item><a routerLink="grn">GRN</a></mat-list-item>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>assignment_return</mat-icon>
+            Returns</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-list-item><a routerLink="customerreturn">Customer Returns</a></mat-list-item>
+        <mat-list-item><a routerLink="supplierreturn">Supplier Returns</a></mat-list-item>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-list-item><a>
+            <mat-icon>assessment</mat-icon>
+            Reports</a></mat-list-item>
+        </mat-expansion-panel-header>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <a>Production Report</a>
+          </mat-expansion-panel-header>
+          <mat-list-item><a routerLink="countbyproductionstatus">Production Orders By Production Status</a></mat-list-item>
+        </mat-expansion-panel>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <a>Sales Report</a>
+          </mat-expansion-panel-header>
+          <mat-list-item><a routerLink="countbyporderstatus">Purchase Orders By Purchase Order Status</a></mat-list-item>
+          <mat-list-item><a routerLink="countbycorderstatus">Customer Orders By Customer Order Status</a></mat-list-item>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <a>Financial Report</a>
+          </mat-expansion-panel-header>
+          <mat-list-item><a routerLink="expense">Expenses</a></mat-list-item>
+          <mat-list-item><a routerLink="income">Income</a></mat-list-item>
+          <mat-list-item><a routerLink="incomeexpense">Income & Expenses</a></mat-list-item>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <a>Inventory Reports</a>
+          </mat-expansion-panel-header>
+          <mat-list-item><a routerLink="productinventoryreport">Product Inventory Report</a></mat-list-item>
+          <mat-list-item><a routerLink="materialinventoryreport">Material Inventory Report</a></mat-list-item>
+        </mat-expansion-panel>
+      </mat-expansion-panel>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+
+</mat-sidenav-container>
+
+

@@ -12,6 +12,8 @@ import {MessageComponent} from "../../../util/dialog/message/message.component";
 import {Supplier} from "../../../entity/supplier";
 import {SupplierService} from "../../../service/supplierservice";
 import {DatePipe} from "@angular/common";
+import {MatTabChangeEvent, MatTabGroup} from "@angular/material/tabs";
+import {TokenStorageService} from "../../services/token-storage.service";
 
 @Component({
   selector: 'app-material',
@@ -35,6 +37,7 @@ export class MaterialComponent {
   data!: MatTableDataSource<Material>;
   imageurl: string = '';
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
 
   suppliers: Array<Supplier> = [];
 
@@ -47,6 +50,7 @@ export class MaterialComponent {
     private ms: MaterialService,
     private sps: SupplierService,
     private rs: RegexService,
+    private ts: TokenStorageService,
     private fb: FormBuilder,
     private dp: DatePipe,
     private dg: MatDialog ) {
@@ -95,7 +99,6 @@ export class MaterialComponent {
   }
 
   createView() {
-    this.imageurl = 'assets/pending.gif';
     this.loadTable("");
   }
 
@@ -106,7 +109,7 @@ export class MaterialComponent {
     this.form.controls['name'].setValidators([Validators.required]);
     this.form.controls['costperunit'].setValidators([Validators.required]);
     this.form.controls['unitofmeasure'].setValidators([Validators.required]);
-    this.form.controls['description'].setValidators([Validators.required]);
+    //this.form.controls['description'].setValidators([Validators.required]);
     this.form.controls['supplier'].setValidators([Validators.required]);
 
 
@@ -136,7 +139,11 @@ export class MaterialComponent {
     this.form.reset();
     //this.clearImage();
     Object.values(this.form.controls).forEach(control => { control.markAsTouched();});
-    this.enableButtons(true, false, false);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(true, false, false);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow = null;
   }
 
@@ -144,11 +151,9 @@ export class MaterialComponent {
     this.ms.getAll(query)
       .then((prods: Material[]) => {
         this.materials = prods;
-        this.imageurl = 'assets/fullfilled.png';
       })
       .catch((error) => {
         console.log(error);
-        this.imageurl = 'assets/rejected.png';
       })
       .finally(() => {
         this.data = new MatTableDataSource(this.materials);
@@ -189,23 +194,6 @@ export class MaterialComponent {
     });
   }
 
-  /* selectImage(e:any):void{
-    if(e.target.files){
-      let reader = new FileReader();
-      reader.readAsDataURL(e.target.files[0]);
-      reader.onload=(event: any)=>{this.imageempurl = event.target.result;
-        this.form.controls['image'].clearValidators();
-      }
-    }
-  }
-
-  clearImage():void{
-    this.imageempurl = 'assets/default.png';
-    this.form.controls['image'].setErrors({'required': true });
-  } */
-
-
-
   add(){
     let errors = this.getErrors();
     if(errors!=""){
@@ -217,13 +205,10 @@ export class MaterialComponent {
     }
     else{
       this.material = this.form.getRawValue();
-      //console.log("Photo-Before"+this.material.photo);
-      //this.material.image=btoa(this.imageempurl);
-      //console.log("Photo-After"+this.material.photo);
       let matdata: string = "";
       // matdata = matdata + "<br>Id is : "+ this.material.id;
-      matdata = matdata + "<br>Name is : "+ this.material.name;
-      matdata = matdata + "<br>Name is : "+ this.material.supplier.companyname;
+      matdata = matdata + "<br>Material name is : "+ this.material.name;
+      matdata = matdata + "<br>Supplier company name is : "+ this.material.supplier.companyname;
       const confirm = this.dg.open(ConfirmComponent, {
         width: '500px',
         data: {heading: "Confirmation - Material Add", message: "Are you sure to Add the following Material? <br> <br>"+ matdata}
@@ -283,22 +268,19 @@ export class MaterialComponent {
 
   }
 
+  onTabChange(event: MatTabChangeEvent) {}
   fillForm(material:Material) {
 
-    this.enableButtons(false, true, true);
+    if (this.ts.getUser().roles.includes("ROLE_ADMIN") || this.ts.getUser().roles.includes("ROLE_MANAGER")) {
+      this.enableButtons(false, true, true);
+    } else {
+      this.enableButtons(false, false, false);
+    }
     this.selectedrow=material;
 
     this.material = JSON.parse(JSON.stringify(material));
     this.oldmaterial = JSON.parse(JSON.stringify(material));
 
-    /* if (this.material.image != null) {
-      this.imageempurl = btoa(this.ematerial.image);
-      this.form.controls['image'].clearValidators();
-    }else {
-      this.clearImage();
-    } */
-
-   // this.material.image = "";
     //@ts-ignore
     this.material.supplier = this.suppliers.find(s => s.id === this.material.supplier.id);
     //@ts-ignore
@@ -306,6 +288,7 @@ export class MaterialComponent {
 
     this.form.patchValue(this.material);
     this.form.markAsPristine();
+    this.tabGroup.selectedIndex = 0;
   }
 
   update() {
